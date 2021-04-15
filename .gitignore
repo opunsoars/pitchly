@@ -74,6 +74,7 @@ docs/_build
 .mypy_cache/
 
 # private files
+.ipynb_checkpoints/
 testing.ipynb
 play.py
 STEPS.md
