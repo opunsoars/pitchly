@@ -72,3 +72,8 @@ docs/_build
 
 # Mypy Cache
 .mypy_cache/
+
+# private files
+testing.ipynb
+play.py
+STEPS.md
