@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import scipy.signal as signal
 
-from params import FIELD_COLOR, FIELD_DIM, FIELD_HEIGHT, FIELD_MARKINGS_COLOR, FIELD_WIDTH, player_marker_args
+from src.pitchly.params import FIELD_COLOR, FIELD_DIM, FIELD_HEIGHT, FIELD_MARKINGS_COLOR, FIELD_WIDTH, player_marker_args
 
 match_dir = "/media/opunsoars/My Book/playground/friends_of_tracking/friends_of_tracking/datahub/metrica_sports/sample-data/data/Sample_Game_1"
 

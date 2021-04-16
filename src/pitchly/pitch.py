@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import plotly.graph_objects as go
 
-from params import (
+from src.pitchly.params import (
     FIELD_COLOR,
     FIELD_DIM,
     FIELD_HEIGHT,

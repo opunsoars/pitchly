@@ -2,7 +2,7 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from tqdm.auto import tqdm
 
-from params import (
+from src.pitchly.params import (
     FIELD_COLOR,
     FIELD_DIM,
     FIELD_HEIGHT,
@@ -11,7 +11,7 @@ from params import (
     event_player_marker_args,
     player_marker_args,
 )
-from pitch import Pitch
+from src.pitchly.pitch import Pitch
 
 
 class TrackingData:
