@@ -59,8 +59,9 @@ class EventData:
             # transform to metric dim (106,68)
             event.raw_event["start"]["x"] = sign * ((event.raw_event["start"]["x"] - 0.5) * 106.0)
             event.raw_event["start"]["y"] = sign * (-1 * (event.raw_event["start"]["y"] - 0.5) * 68.0)
-            event.raw_event["end"]["x"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
-            event.raw_event["end"]["y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
+            if event.raw_event["end"]["x"]:
+                event.raw_event["end"]["x"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
+                event.raw_event["end"]["y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
         return event_list
 
     def add_tags(self, event_list):
@@ -92,6 +93,39 @@ class EventData:
                 corners.append(self.events[i + 1])
         corners = self.metric_coords(corners)
         return corners
+
+    def get_freekicks(self):
+        freekicks = []
+        for i, event in enumerate(self.events):
+            if "FREE KICK" in event.raw_event.get("tags"):
+                freekicks.append(self.events[i + 1])
+        freekicks = self.metric_coords(freekicks)
+        return freekicks
+
+    def get_challenges(self):
+        challenges = [event for event in self.events if event.event_name == "CHALLENGE"]
+        challenges = self.metric_coords(challenges)
+        return challenges
+
+    def get_recoveries(self):
+        recoveries = [
+            event
+            for event in self.events
+            if event.event_name == "recovery"
+            and ("INTERCEPTION" in event.raw_event["tags"] or "THEFT" in event.raw_event["tags"])
+        ]
+        recoveries = self.metric_coords(recoveries)
+        return recoveries
+
+    def get_turnovers(self):
+        turnovers = [
+            event
+            for event in self.events
+            if event.event_name == "pass"
+            and ("INTERCEPTION" in event.raw_event["tags"] or "THEFT" in event.raw_event["tags"])
+        ]
+        turnovers = self.metric_coords(turnovers)
+        return turnovers
 
     def plot(self, index=None, type=None, team=None, player=None, trace=False):
         if type == "shots":
@@ -156,6 +190,98 @@ class EventData:
                         marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[0, 2],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "freekicks":
+            data = self.get_freekicks()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        name=row.result.value,
+                        mode="lines+markers" if trace else "markers",
+                        marker_size=[15, 0],
+                        marker_symbol="circle-x",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[2, 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "challenges":
+            data = self.get_challenges()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        name=row.raw_event["tags"][0],
+                        mode="markers",
+                        marker_size=[18, 0],
+                        marker_symbol="hexagon",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[1, 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "recoveries":
+            data = self.get_recoveries()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        name=row.raw_event["tags"][0],
+                        mode="markers",
+                        marker_size=[18, 0],
+                        marker_symbol="hexagon",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[1, 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "turnovers":
+            data = self.get_turnovers()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        name=row.raw_event["tags"][0],
+                        mode="markers",
+                        marker_size=[18, 0],
+                        marker_symbol="hexagon",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[1, 0],
                         line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
