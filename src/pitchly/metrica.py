@@ -13,6 +13,7 @@ from src.pitchly.params import (
 )
 from src.pitchly.pitch import Pitch
 
+
 class EventData:
     def __init__(self, events: list):
         events = self.add_tags(events)
@@ -28,7 +29,7 @@ class EventData:
                 else:
                     event.raw_event["marker_symbol"] = "triangle-up"
 
-            elif getattr(event.result,'value','')=='GOAL':
+            elif getattr(event.result, "value", "") == "GOAL":
                 event.raw_event["marker_color"] = "darkgreen"
                 event.raw_event["marker_line_color"] = "white"
                 event.raw_event["marker_line_width"] = 2
@@ -50,37 +51,47 @@ class EventData:
 
         self.events = events
 
-    def metric_coords(self,event_list):
+    def metric_coords(self, event_list):
         for event in event_list:
+            # flip sign
+            sign = 1 if event.period.id == 1 else -1
+            # print(event.raw_event)
             # transform to metric dim (106,68)
-            event.raw_event["start"]["x"] = (event.raw_event["start"]["x"] - 0.5) * 106.0
-            event.raw_event["start"]["y"] = -1 * (event.raw_event["start"]["y"] - 0.5) * 68.0
-            event.raw_event["end"]["x"] = (event.raw_event["end"]["x"] - 0.5) * 106.0
-            event.raw_event["end"]["y"] = -1 * (event.raw_event["end"]["y"] - 0.5) * 68.0
+            event.raw_event["start"]["x"] = sign * ((event.raw_event["start"]["x"] - 0.5) * 106.0)
+            event.raw_event["start"]["y"] = sign * (-1 * (event.raw_event["start"]["y"] - 0.5) * 68.0)
+            event.raw_event["end"]["x"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
+            event.raw_event["end"]["y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
         return event_list
 
     def add_tags(self, event_list):
         for event in event_list:
-            subtypes = event.raw_event.get('subtypes','')
-            tags=[]
+            subtypes = event.raw_event.get("subtypes", "")
+            tags = []
             if subtypes:
-                if isinstance(subtypes,list):
+                if isinstance(subtypes, list):
                     tags.extend([x["name"] for x in subtypes])
                 else:
                     tags.append(subtypes["name"])
             event.raw_event["tags"] = tags
         return event_list
-        
+
     def get_shots(self):
         shots = [event for event in self.events if event.event_name == "shot"]
         shots = self.metric_coords(shots)
-
         return shots
 
     def get_goals(self):
-        goals = [event  for event in self.events if getattr(event.result,'value','')=='GOAL']
+        goals = [event for event in self.events if getattr(event.result, "value", "") == "GOAL"]
         goals = self.metric_coords(goals)
         return goals
+
+    def get_corners(self):
+        corners = []
+        for i, event in enumerate(self.events):
+            if "CORNER KICK" in event.raw_event.get("tags"):
+                corners.append(self.events[i + 1])
+        corners = self.metric_coords(corners)
+        return corners
 
     def plot(self, index=None, type=None, team=None, player=None, trace=False):
         if type == "shots":
@@ -91,9 +102,9 @@ class EventData:
                     go.Scatter(
                         x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
                         y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
-                        text=[None, None],
+                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
-                        mode="lines+markers+text" if trace else "markers+text",
+                        mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
                         marker_symbol=row.raw_event["marker_symbol"],
                         marker_color=row.raw_event["marker_color"],
@@ -105,7 +116,7 @@ class EventData:
                         showlegend=False,
                     )
                 )
-        
+
         elif type == "goals":
             data = self.get_goals()
             traces = []
@@ -114,15 +125,38 @@ class EventData:
                     go.Scatter(
                         x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
                         y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
-                        text=[None, None],
+                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
-                        mode="lines+markers+text" if trace else "markers+text",
+                        mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
                         marker_symbol=row.raw_event["marker_symbol"],
                         marker_color=row.raw_event["marker_color"],
                         marker_line_color=row.raw_event["marker_line_color"],
                         marker_line_width=[row.raw_event["marker_line_width"], 0],
                         line_color=row.raw_event["marker_line_color"],
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "corners":
+            data = self.get_corners()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        name=row.result.value,
+                        mode="lines+markers" if trace else "markers",
+                        marker_size=[0, 10],
+                        marker_symbol="square",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[0, 2],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
