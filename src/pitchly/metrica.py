@@ -1,18 +1,16 @@
-import plotly.figure_factory as ff
+# import plotly.figure_factory as ff
 import plotly.graph_objects as go
-from tqdm.auto import tqdm
-import kloppy
 
-from src.pitchly.params import (
-    FIELD_COLOR,
-    FIELD_DIM,
-    FIELD_HEIGHT,
-    FIELD_MARKINGS_COLOR,
-    FIELD_WIDTH,
-    event_player_marker_args,
-    player_marker_args,
-)
+# from src.pitchly.params import FIELD_COLOR
+# from src.pitchly.params import FIELD_DIM
+# from src.pitchly.params import FIELD_HEIGHT
+# from src.pitchly.params import FIELD_MARKINGS_COLOR
+# from src.pitchly.params import FIELD_WIDTH
+# from src.pitchly.params import event_player_marker_args
+# from src.pitchly.params import player_marker_args
 from src.pitchly.pitch import Pitch
+
+# from tqdm.auto import tqdm
 
 
 class EventData:

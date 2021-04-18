@@ -1,14 +1,21 @@
 import glob
-from collections import namedtuple
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+# import plotly.graph_objects as go
 import scipy.signal as signal
 
-from src.pitchly.params import FIELD_COLOR, FIELD_DIM, FIELD_HEIGHT, FIELD_MARKINGS_COLOR, FIELD_WIDTH, player_marker_args
+# from src.pitchly.params import FIELD_COLOR
+from src.pitchly.params import FIELD_DIM
 
-match_dir = "/media/opunsoars/My Book/playground/friends_of_tracking/friends_of_tracking/datahub/metrica_sports/sample-data/data/Sample_Game_1"
+# from collections import namedtuple
+# from src.pitchly.params import FIELD_HEIGHT
+# from src.pitchly.params import FIELD_MARKINGS_COLOR
+# from src.pitchly.params import FIELD_WIDTH
+# from src.pitchly.params import player_marker_args
+
+match_dir = "/media/opunsoars/My Book/playground/friends_of_tracking/friends_of_tracking/\
+    datahub/metrica_sports/sample-data/data/Sample_Game_1"
 
 
 def modify_cols(tracking_df):
@@ -39,9 +46,9 @@ def convert_to_metric_coords(data, field_dimen=FIELD_DIM):
     y_columns = [c for c in data.columns if c.endswith("Y")]
     data[x_columns] = (data[x_columns] - 0.5) * field_dimen[0]
     data[y_columns] = -1 * (data[y_columns] - 0.5) * field_dimen[1]
-    """ 
+    """
     ------------ ***NOTE*** ------------
-    Metrica actually define the origin at the *top*-left of the field, not the bottom-left, as discussed in the YouTube video. 
+    Metrica actually define the origin at the *top*-left of the field, not the bottom-left, as discussed in the YouTube video.
     I've changed the line above to reflect this. It was originally:
     data[y_columns] = ( data[y_columns]-0.5 ) * field_dimen[1]
     ------------ ********** ------------
@@ -58,10 +65,13 @@ def calc_player_velocities(team, smoothing=True, filter_="moving average", windo
     -----------
         team: the tracking DataFrame for home or away team
         smoothing: boolean variable that determines whether velocity measures are smoothed. Default is True.
-        filter: type of filter to use when smoothing the velocities. Default is Savitzky-Golay, which fits a polynomial of order 'polyorder' to the data within each window
+        filter: type of filter to use when smoothing the velocities. Default is Savitzky-Golay,\
+             which fits a polynomial of order 'polyorder' to the data within each window
         window: smoothing window size in # of frames
-        polyorder: order of the polynomial for the Savitzky-Golay filter. Default is 1 - a linear fit to the velcoity, so gradient is the acceleration
-        maxspeed: the maximum speed that a player can realisitically achieve (in meters/second). Speed measures that exceed maxspeed are tagged as outliers and set to NaN.
+        polyorder: order of the polynomial for the Savitzky-Golay filter. \
+            Default is 1 - a linear fit to the velcoity, so gradient is the acceleration
+        maxspeed: the maximum speed that a player can realisitically achieve (in meters/second). \
+            d measures that exceed maxspeed are tagged as outliers and set to NaN.
 
     Returrns
     -----------

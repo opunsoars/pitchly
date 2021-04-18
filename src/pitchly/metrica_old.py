@@ -1,17 +1,17 @@
+import re
+
+import numpy as np
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
-import numpy as np
 from tqdm.auto import tqdm
 
-from src.pitchly.params import (
-    FIELD_COLOR,
-    FIELD_DIM,
-    FIELD_HEIGHT,
-    FIELD_MARKINGS_COLOR,
-    FIELD_WIDTH,
-    event_player_marker_args,
-    player_marker_args,
-)
+# from src.pitchly.params import FIELD_COLOR
+# from src.pitchly.params import FIELD_DIM
+# from src.pitchly.params import FIELD_HEIGHT
+# from src.pitchly.params import FIELD_MARKINGS_COLOR
+# from src.pitchly.params import FIELD_WIDTH
+from src.pitchly.params import event_player_marker_args
+from src.pitchly.params import player_marker_args
 from src.pitchly.pitch import Pitch
 
 
@@ -263,7 +263,7 @@ class EventData:
         buildup["From_num"] = buildup.From.apply(lambda x: re.findall("\d+", str(x))).apply(
             lambda x: x[0] if len(x) > 0 else None
         )
-        buildup["To_num"] = buildup.To.apply(lambda x: re.findall("\d+", str(x))).apply(
+        buildup["To_num"] = buildup.To.apply(lambda x: re.findall(r"\d+", str(x))).apply(
             lambda x: x[0] if len(x) > 0 else None
         )
         buildup["To_prev"] = buildup.To_num.shift(1)
@@ -505,7 +505,7 @@ class EventData:
                         showlegend=False,
                     )
                 )
-        
+
         elif type == "passes":
             data = self.get_passes()
             traces = []
