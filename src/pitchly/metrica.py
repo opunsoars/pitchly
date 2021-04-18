@@ -1,6 +1,7 @@
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from tqdm.auto import tqdm
+import kloppy
 
 from src.pitchly.params import (
     FIELD_COLOR,
@@ -161,7 +162,80 @@ class EventData:
         passes = self.metric_coords(passes)
         return passes
 
+    def get_buildup(self, index):
+        # PASS/CARRY , ![GENERIC CHALLENGE/RECOVERY]
+        buildup = []
+        for i, event in enumerate(self.events):
+            if event.raw_event["index"] == index:
+                team = event.ball_owning_team
+                while i > 0:
+                    # print (i,self.events[i].raw_event['index'])
+                    if self.events[i].result:
+                        buildup.append(self.events[i])
+                    i -= 1
+                    if self.events[i].ball_owning_team and self.events[i].ball_owning_team != team:
+                        break
+
+        return buildup
+
+    def event_traces(self, row):
+        event_traces = []
+        x, y, player_nums = [], [], []
+        x.extend([row.raw_event["start"]["x"], row.raw_event["end"]["x"]])
+        y.extend([row.raw_event["start"]["y"], row.raw_event["end"]["y"]])
+        if row.event_name == "pass":
+            player_nums.extend([row.player.jersey_no, row.receiver_player.jersey_no])
+        else:
+            player_nums.extend([row.player.jersey_no, None])
+
+        event_traces.append(
+            go.Scatter(
+                x=x,
+                y=y,
+                text=player_nums,
+                name=row.event_type.name,
+                mode="lines+markers+text",
+                marker_size=[20, 0],
+                # marker_symbol="circle-x",
+                marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                marker_line_color="white",
+                marker_line_width=[2, 0],
+                line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                line_width=1,
+                line_dash="dash" if row.event_name == "carry" else None,
+                textfont=dict(size=11, color="white"),
+                showlegend=False,
+            )
+        )
+
+        return event_traces
+
+    def get_traces(self, index):
+        event_chain = self.get_buildup(index)
+        event_chain = self.metric_coords(event_chain)
+        traces = []
+        for row in event_chain:
+            traces.extend(self.event_traces(row))
+
+        return traces
+
+    def title(self, index):
+        for row in self.events:
+            text = "Event"
+            raw = row.raw_event
+            if raw["index"] == index:
+                time = f"{raw['start']['time']//60:0.0f}'{raw['start']['time']%60:0.0f}\""
+                text = f"{raw['type']['name']} > {raw['tags']} > {row.team} | {row.player.name} @ {time}"
+                break
+
+        return text
+
     def plot(self, index=None, type=None, team=None, player=None, trace=False):
+
+        if index:
+            pitch = Pitch()
+            return pitch.plot_event(data=self.get_traces(index), title=self.title(index))
+
         if type == "shots":
             data = self.get_shots()
             traces = []

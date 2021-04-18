@@ -1,5 +1,6 @@
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
+import numpy as np
 from tqdm.auto import tqdm
 
 from src.pitchly.params import (
