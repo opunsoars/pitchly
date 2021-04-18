@@ -155,6 +155,12 @@ class EventData:
         assists = self.metric_coords(assists)
         return assists
 
+    def get_passes(self):
+        # only complete passes for now
+        passes = [event for event in self.events if event.event_name == "pass" and event.result.value == "COMPLETE"]
+        passes = self.metric_coords(passes)
+        return passes
+
     def plot(self, index=None, type=None, team=None, player=None, trace=False):
         if type == "shots":
             data = self.get_shots()
@@ -358,6 +364,75 @@ class EventData:
                         marker_line_width=[2, 0],
                         line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "passes":
+            data = self.get_passes()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=[row.player.jersey_no, row.receiver_player.jersey_no],
+                        name=row.result.value,
+                        mode="lines",
+                        # marker_size=[0, 0],
+                        # marker_symbol=row["marker_symbol"],
+                        # marker_color=row["marker_color"],
+                        # marker_line_color=row["marker_line_color"],
+                        # marker_line_width=[row["marker_line_width"], 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        # textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "passers":
+            data = self.get_passes()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=[None, None],
+                        name=row.result.value,
+                        mode="markers+text",
+                        marker_size=[10, 0],
+                        marker_symbol="diamond",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[1, 0],
+                        # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        # line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "receivers":
+            data = self.get_passes()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=[None, None],
+                        name=row.result.value,
+                        mode="markers+text",
+                        marker_size=[0, 10],
+                        marker_symbol="diamond",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[0, 1],
+                        # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        # line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
                     )

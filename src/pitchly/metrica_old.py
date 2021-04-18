@@ -504,6 +504,7 @@ class EventData:
                         showlegend=False,
                     )
                 )
+        
         elif type == "passes":
             data = self.get_passes()
             traces = []
