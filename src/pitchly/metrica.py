@@ -1,16 +1,234 @@
-# import plotly.figure_factory as ff
+import numpy as np
+import plotly.figure_factory as ff
 import plotly.graph_objects as go
+from scipy import signal
+from tqdm.auto import tqdm
 
-# from src.pitchly.params import FIELD_COLOR
-# from src.pitchly.params import FIELD_DIM
 # from src.pitchly.params import FIELD_HEIGHT
 # from src.pitchly.params import FIELD_MARKINGS_COLOR
 # from src.pitchly.params import FIELD_WIDTH
 # from src.pitchly.params import event_player_marker_args
-# from src.pitchly.params import player_marker_args
+# from src.pitchly.params import FIELD_COLOR
+from src.pitchly.params import FIELD_DIM
+from src.pitchly.params import player_marker_args
 from src.pitchly.pitch import Pitch
 
-# from tqdm.auto import tqdm
+
+class TrackingData:
+    def __init__(self, data, metadata):
+        self.metadata = metadata
+        self.home_players = [x.player_id for x in self.metadata.teams[0].players]
+        self.away_players = [x.player_id for x in self.metadata.teams[1].players]
+        self.home_jerseys = [x.jersey_no for x in self.metadata.teams[0].players]
+        self.away_jerseys = [x.jersey_no for x in self.metadata.teams[1].players]
+
+        data = self.metric_coords(data)
+        data = self.calc_player_velocities(data, filter_="moving average")
+        data = self.flip_second_half_direction(data)
+        self.data = data
+
+    def metric_coords(self, data, field_dimen=FIELD_DIM):
+        x_columns = [c for c in data.columns if c.endswith("_x")]
+        y_columns = [c for c in data.columns if c.endswith("_y")]
+        data[x_columns] = (data[x_columns] - 0.5) * field_dimen[0]
+        data[y_columns] = -1 * (data[y_columns] - 0.5) * field_dimen[1]
+
+        return data
+
+    def calc_player_velocities(
+        self, data, smoothing=True, filter_="moving average", window=7, polyorder=1, maxspeed=12
+    ):
+        # Get the player ids
+        player_ids = self.home_players + self.away_players
+        # Calculate the timestep from one frame to the next. Should always be 0.04 within the same half
+        dt = data.timestamp.diff()
+
+        # index of first frame in second half
+        second_half_idx = data.period_id.idxmax(2)
+        # estimate velocities for players in team
+        for player in player_ids:  # cycle through players individually
+            # difference player positions in timestep dt to get unsmoothed estimate of velicity
+            vx = data[player + "_x"].diff() / dt
+            vy = data[player + "_y"].diff() / dt
+
+            if maxspeed > 0:
+                # remove unsmoothed data points that exceed the maximum speed (these are most likely position errors)
+                raw_speed = np.sqrt(vx ** 2 + vy ** 2)
+                vx[raw_speed > maxspeed] = np.nan
+                vy[raw_speed > maxspeed] = np.nan
+
+            if smoothing:
+                if filter_ == "Savitzky-Golay":
+                    # calculate first half velocity
+                    vx.iloc[:second_half_idx] = signal.savgol_filter(
+                        vx.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                    )
+                    vy.iloc[:second_half_idx] = signal.savgol_filter(
+                        vy.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                    )
+                    # calculate second half velocity
+                    vx.iloc[second_half_idx:] = signal.savgol_filter(
+                        vx.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                    )
+                    vy.iloc[second_half_idx:] = signal.savgol_filter(
+                        vy.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                    )
+                elif filter_ == "moving average":
+                    ma_window = np.ones(window) / window
+                    # calculate first half velocity
+                    vx.iloc[:second_half_idx] = np.convolve(vx.iloc[:second_half_idx], ma_window, mode="same")
+                    vy.iloc[:second_half_idx] = np.convolve(vy.iloc[:second_half_idx], ma_window, mode="same")
+                    # calculate second half velocity
+                    vx.iloc[second_half_idx:] = np.convolve(vx.iloc[second_half_idx:], ma_window, mode="same")
+                    vy.iloc[second_half_idx:] = np.convolve(vy.iloc[second_half_idx:], ma_window, mode="same")
+
+            # put player speed in x,y direction, and total speed back in the data frame
+            data[player + "_vx"] = vx
+            data[player + "_vy"] = vy
+            data[player + "_speed"] = np.sqrt(vx ** 2 + vy ** 2)
+
+        return data
+
+    def flip_second_half_direction(self, data):
+        """
+        Flip coordinates in second half so that each team always shoots in the same direction through the match.
+        """
+        second_half_idx = data.period_id.idxmax(2)
+        columns = [c for c in data.columns if c[-1] in ["x", "y"]]
+        data.loc[second_half_idx:, columns] *= -1
+        return data
+
+    def get_frameID_from_timestamp(self, timestamp):
+        return self.data.query("timestamp==@timestamp").index[0]
+
+    def get_timestamp(self, mins):
+        if ":" in mins:
+            seconds = int(mins.split(":")[0]) * 60 + int(mins.split(":")[1]) + 0.04
+        else:
+            seconds = int(mins) * 60
+        return seconds
+
+    def get_frame_data(self, frameID):
+
+        frame_data = self.data.loc[frameID]
+
+        return frame_data
+
+    def position_traces(self, frame_data):
+        player_ids = (self.home_players, self.away_players)
+        jerseys = (self.home_jerseys, self.away_jerseys)
+
+        position_traces = []
+        for i, side in enumerate(["Home", "Away"]):
+            players = player_ids[i]
+            xlocs = [frame_data[f"{player_id}_x"] for player_id in players]
+            ylocs = [frame_data[f"{player_id}_y"] for player_id in players]
+
+            traces = go.Scatter(x=xlocs, y=ylocs, text=jerseys[i], **player_marker_args[side], name=side)
+            position_traces.append(traces)
+
+        return position_traces
+
+    def velocity_traces(self, frame_data):
+        player_ids = (self.home_players, self.away_players)
+        velocity_quivers = []
+        for i, side in enumerate(["Home", "Away"]):
+            players = player_ids[i]
+            xlocs = [frame_data[f"{player_id}_x"] for player_id in players]
+            ylocs = [frame_data[f"{player_id}_y"] for player_id in players]
+            xvels = [frame_data[f"{player_id}_vx"] for player_id in players]
+            yvels = [frame_data[f"{player_id}_vy"] for player_id in players]
+
+            trace = ff.create_quiver(
+                x=xlocs,
+                y=ylocs,
+                u=xvels,
+                v=yvels,
+                scale=0.5,
+                line_color=player_marker_args[side]["marker_color"],
+                name=side + "_vel",
+            )
+            velocity_quivers.append(trace.data[0])
+
+        return velocity_quivers
+
+    def ball_trace(self, frame_data):
+        ball_trace = go.Scatter(
+            x=[frame_data["ball_x"]],
+            y=[frame_data["ball_y"]],
+            marker_size=10,
+            marker_opacity=0.8,
+            marker_color="black",
+            marker_line_width=2,
+            marker_line_color="green",
+            name="ball",
+        )
+
+        return ball_trace
+
+    def get_traces(self, frameID=None, velocities=True, ball=True):
+        """Combines various traces for required plot and returns it
+
+        Args:
+            velocities (bool, optional): If True, velocity quivers will be added. Defaults to True.
+            ball (bool, optional): If True, ball trace is added. Defaults to True.
+        """
+        frame_data = self.get_frame_data(frameID)
+
+        traces = []
+        if velocities:
+            traces.extend(self.velocity_traces(frame_data))
+
+        traces.extend(self.position_traces(frame_data))
+
+        if ball:
+            traces.append(self.ball_trace(frame_data))
+
+        return traces
+
+    def get_frames(self, frame_range, velocities=True, ball=True):
+
+        frames = []
+        for frameID in tqdm(frame_range):
+            frame = {"data": [], "name": str(frameID)}
+            frame["data"].extend(self.get_traces(frameID, velocities, ball))
+            frames.append(frame)
+
+        return frames
+
+    def plot_frame(self, frameID=None, time=None, plot_ball=True, show_velocities=False):
+
+        if time:
+            seconds = self.get_timestamp(time)
+            frameID = self.get_frameID_from_timestamp(seconds)
+        else:
+            seconds = self.data.loc[frameID, "timestamp"]
+            time = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
+
+        title = f"Time: [{time}] | FrameID: {frameID}"
+        data = self.get_traces(frameID=frameID, velocities=show_velocities, ball=plot_ball)
+        pitch = Pitch()
+        return pitch.plot_freeze_frame(data, title)
+
+    def plot_sequence(self, f0=None, f1=None, t0=None, t1=None, show_velocities=True, player_num=None):
+
+        if t1:
+            t0 = self.get_timestamp(t0)
+            t1 = self.get_timestamp(t1)
+
+            f0 = self.get_frameID_from_timestamp(t0)
+            f1 = self.get_frameID_from_timestamp(t1)
+        else:
+            seconds = self.data.loc[f0, "timestamp"]
+            t0 = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
+
+        frame_range = range(f0, f1)
+
+        title = f"Time: [{t0}] | FrameID: {f0} to {f1}"
+        data = self.get_traces(frameID=f0, velocities=show_velocities)
+        frames = self.get_frames(frame_range, velocities=show_velocities)
+        pitch = Pitch()
+        return pitch.plot_frames_sequence(data, frames, frame_range, title)
 
 
 class EventData:
