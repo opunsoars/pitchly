@@ -127,6 +127,34 @@ class EventData:
         turnovers = self.metric_coords(turnovers)
         return turnovers
 
+    def get_shot_assists(self):
+        shot_assists = []  # passes that lead to SHOT/CARRY+SHOT
+        for i, event in enumerate(self.events):
+            if event.event_name == "shot":
+                if self.events[i - 1].event_name == "pass":
+                    # passes that led to shots
+                    shot_assists.append(self.events[i - 1])
+                elif self.events[i - 1].event_name == "carry" and self.events[i - 2].event_name == "pass":
+                    # passes that led to carry+shot
+                    shot_assists.append(self.events[i - 2])
+
+        shot_assists = self.metric_coords(shot_assists)
+        return shot_assists
+
+    def get_assists(self):
+        assists = []  # passes that lead to GOAL/CARRY+GOAL
+        for i, event in enumerate(self.events):
+            if getattr(event.result, "value", "") == "GOAL":
+                if self.events[i - 1].event_name == "pass":
+                    # passes that led to goals
+                    assists.append(self.events[i - 1])
+                elif self.events[i - 1].event_name == "carry" and self.events[i - 2].event_name == "pass":
+                    # passes that led to carry+goal
+                    assists.append(self.events[i - 2])
+
+        assists = self.metric_coords(assists)
+        return assists
+
     def plot(self, index=None, type=None, team=None, player=None, trace=False):
         if type == "shots":
             data = self.get_shots()
@@ -282,6 +310,52 @@ class EventData:
                         marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "shot_assists":
+            data = self.get_shot_assists()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=[row.player.jersey_no, None],
+                        name=row.result.value,
+                        mode="lines+markers+text" if trace else "markers+text",
+                        marker_size=[18, 0],
+                        marker_symbol="pentagon",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[2, 0],
+                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_width=1,
+                        textfont=dict(size=11, color="white"),
+                        showlegend=False,
+                    )
+                )
+
+        elif type == "assists":
+            data = self.get_assists()
+            traces = []
+            for row in data:
+                traces.append(
+                    go.Scatter(
+                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
+                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        text=[row.player.jersey_no, None],
+                        name=row.result.value,
+                        mode="lines+markers+text" if trace else "markers+text",
+                        marker_size=[18, 0],
+                        marker_symbol="pentagon",
+                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_line_color="white",
+                        marker_line_width=[2, 0],
                         line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
