@@ -25,8 +25,8 @@ Data Loading
     # tracking data [METRICA]
     from codeball import GameDataset
 
-    metadata_file = (glob.glob(f"{match_dir}/*metadata*")[0])
-    tracking_file = (glob.glob(f"{match_dir}/*tracking*")[0])
+    metadata_file = (glob.glob(f"{match_dir}/*metadata*")[0]) #xml file
+    tracking_file = (glob.glob(f"{match_dir}/*tracking*")[0]) #txt file
 
     dataset = GameDataset(
         tracking_metadata_file=metadata_file,
@@ -44,5 +44,23 @@ Data Loading
 Tracking Data
 =============
 
+.. code-block:: python
+    :linenos:
 
-testing
+    # import the pitchly wrapper for metrica tracking data
+    from pitchly.metrica import TrackingData
+
+    # feed the loaded data 
+    data = TrackingData(dataset.tracking,dataset.metadata)
+
+Plot Frame by FrameID
+^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    data.plot_frame(frameID=264)
+
+.. image:: t1.png
+    :width: 400
+    :alt: Alternative text
+
+
