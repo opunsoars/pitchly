@@ -106,3 +106,20 @@ Note, to combine the coverage data from all the tox environments run:
       - ::
 
             PYTEST_ADDOPTS=--cov-append tox
+
+
+Contact
+=======
+
+Get in touch! For help or to contribute with ideas and to discuss football analytics.
+Mail me at vinay.warrier@gmail.com or connect on `Twitter <https://twitter.com/opunsoars>`_ | `LinkedIn <https://www.linkedin.com/in/opunsoars/>`_
+
+The story behind putting this library together came from the short project in the Friends of Tracking initiative last year (2020).  https://twitter.com/opunsoars/status/1259471707577827329
+
+Acknowledgements
+================
+
+`David Sumpter <https://twitter.com/Soccermatics>`_ - for the amazing Friends of Tracking initiative
+`Laurie Shaw <https://twitter.com/eightyfivepoint>`_ for starter code for data processing
+`Bruno Dagnino <https://twitter.com/brunodagnino>`_ & `Metrica Sports <https://twitter.com/metricasports>`_ - for the open data (especially tracking) and codeball/kloppy libraries
+`Koen Vossen <https://twitter.com/mr_le_fox>`_ - for codeball/kloppy libraries and inspiring work in open source football analytics
