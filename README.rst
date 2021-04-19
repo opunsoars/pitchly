@@ -67,6 +67,7 @@ Installation
 ============
 
 ::
+
     pip install pitchly
 
 You can also install the in-development version with::
