@@ -66,7 +66,7 @@ A python package that is a wrapper for Plotly to generate football tracking and 
 Installation
 ============
 
-
+::
     pip install pitchly
 
 You can also install the in-development version with::
