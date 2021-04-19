@@ -21,7 +21,7 @@ Data Loading
     :linenos:
 
     # match directory
-    match_dir = "/home/opunsoars/xFootball/datahub/"
+    match_dir = "/match/folder/with/metrica/data/"
 
     # tracking data [METRICA]
     from codeball import GameDataset
