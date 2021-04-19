@@ -150,7 +150,6 @@ Corners
     :width: 500
     :alt: corners
 
-Corners do not have ``trace`` option and the markers indicate target locations
 
 Freekicks
 ^^^^^^^^^
@@ -176,6 +175,8 @@ Challenges
     :width: 500
     :alt: challenges
 
+Challenges do not have ``trace`` option
+
 Recoveries
 ^^^^^^^^^^
 
@@ -186,6 +187,8 @@ Recoveries
 .. image:: imgs/recoveries.gif
     :width: 500
     :alt: recoveries
+
+Recoveries do not have ``trace`` option
 
 Shot Assists
 ^^^^^^^^^^^^
