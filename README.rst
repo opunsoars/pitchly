@@ -74,6 +74,7 @@ You can also install the in-development version with::
 
     pip install https://github.com/opunsoars/pitchly/archive/master.zip
 
+``pitchly`` currently supports Metrica data formats. Other formats coming soon.
 
 Documentation
 =============
