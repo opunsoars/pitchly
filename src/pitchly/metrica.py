@@ -94,7 +94,7 @@ class TrackingData:
         Flip coordinates in second half so that each team always shoots in the same direction through the match.
         """
         second_half_idx = data.period_id.idxmax(2)
-        columns = [c for c in data.columns if c[-1] in ["x", "y"]]
+        columns = [c for c in data.columns if c[-1] in ["X", "y"]]
         data.loc[second_half_idx:, columns] *= -1
         return data
 
@@ -233,8 +233,8 @@ class TrackingData:
 
 class EventData:
     def __init__(self, events: list):
-        events = self.add_tags(events)
-        for event in events:
+        self.events = self.add_tags(events)
+        for event in self.events:
             tags = event.raw_event["tags"]
             if "SAVED" in tags or "BLOCKED" in tags:
                 event.raw_event["marker_color"] = "white"
@@ -266,7 +266,7 @@ class EventData:
                 else:
                     event.raw_event["marker_symbol"] = "triangle-up-open"
 
-        self.events = events
+        # self.events = events
 
     def metric_coords(self, event_list):
         for event in event_list:
@@ -274,11 +274,11 @@ class EventData:
             sign = 1 if event.period.id == 1 else -1
             # print(event.raw_event)
             # transform to metric dim (106,68)
-            event.raw_event["start"]["x"] = sign * ((event.raw_event["start"]["x"] - 0.5) * 106.0)
-            event.raw_event["start"]["y"] = sign * (-1 * (event.raw_event["start"]["y"] - 0.5) * 68.0)
-            if event.raw_event["end"]["x"]:
-                event.raw_event["end"]["x"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
-                event.raw_event["end"]["y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
+            event.raw_event["start"]["X"] = sign * ((event.raw_event["start"]["x"] - 0.5) * 106.0)
+            event.raw_event["start"]["Y"] = sign * (-1 * (event.raw_event["start"]["y"] - 0.5) * 68.0)
+            if event.raw_event["end"]["x"] is not None:
+                event.raw_event["end"]["X"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
+                event.raw_event["end"]["Y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
         return event_list
 
     def add_tags(self, event_list):
@@ -397,8 +397,8 @@ class EventData:
     def event_traces(self, row):
         event_traces = []
         x, y, player_nums = [], [], []
-        x.extend([row.raw_event["start"]["x"], row.raw_event["end"]["x"]])
-        y.extend([row.raw_event["start"]["y"], row.raw_event["end"]["y"]])
+        x.extend([row.raw_event["start"]["X"], row.raw_event["end"]["X"]])
+        y.extend([row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]])
         if row.event_name == "pass":
             player_nums.extend([row.player.jersey_no, row.receiver_player.jersey_no])
         else:
@@ -458,8 +458,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -481,8 +481,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -504,8 +504,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -527,8 +527,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -550,8 +550,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], None],
+                        y=[row.raw_event["start"]["Y"], None],
                         text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
@@ -573,8 +573,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], None],
+                        y=[row.raw_event["start"]["Y"], None],
                         text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
@@ -596,8 +596,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], None],
+                        y=[row.raw_event["start"]["Y"], None],
                         text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
@@ -619,12 +619,12 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=[row.player.jersey_no, None],
                         name=row.result.value,
                         mode="lines+markers+text" if trace else "markers+text",
-                        marker_size=[18, 0],
+                        marker_size=[20, 0],
                         marker_symbol="pentagon",
                         marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         marker_line_color="white",
@@ -642,12 +642,12 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=[row.player.jersey_no, None],
                         name=row.result.value,
                         mode="lines+markers+text" if trace else "markers+text",
-                        marker_size=[18, 0],
+                        marker_size=[20, 0],
                         marker_symbol="pentagon",
                         marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
                         marker_line_color="white",
@@ -665,8 +665,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=[row.player.jersey_no, row.receiver_player.jersey_no],
                         name=row.result.value,
                         mode="lines",
@@ -688,8 +688,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=[None, None],
                         name=row.result.value,
                         mode="markers+text",
@@ -711,8 +711,8 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["x"], row.raw_event["end"]["x"]],
-                        y=[row.raw_event["start"]["y"], row.raw_event["end"]["y"]],
+                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
+                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
                         text=[None, None],
                         name=row.result.value,
                         mode="markers+text",
