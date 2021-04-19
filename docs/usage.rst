@@ -60,7 +60,39 @@ Plot Frame by FrameID
     data.plot_frame(frameID=264)
 
 .. image:: t1.png
-    :width: 400
+    :width: 500
     :alt: Alternative text
 
+Plot Frame by Time
+^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: python
 
+    data.plot_frame(time='17:20')
+
+.. image:: t2.png
+    :width: 500
+    :alt: Alternative text
+
+Plot Sequence by FrameIDs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+You can plot a sequence of frames with a slider to animate/track an event.
+
+.. code-block:: python
+
+    data.plot_sequence(f0=17850,f1=17950)
+
+.. image:: t1.gif
+    :width: 500
+    :alt: Alternative text
+
+Plot Sequence by Time
+^^^^^^^^^^^^^^^^^^^^^
+Or use the start time and end time for an interval sequence.
+
+.. code-block:: python
+
+    data.plot_sequence(t0='72',t1='72:06')
+
+.. image:: t2.gif
+    :width: 500
+    :alt: Alternative text
