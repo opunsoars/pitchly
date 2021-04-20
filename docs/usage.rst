@@ -110,7 +110,7 @@ Event Data
     from pitchly.metrica import EventData
 
     # feed the loaded data 
-    data = EventData(event_dataset)
+    data = EventData(event_dataset.events)
 
 You can now plot various events cumulatively from the match by calling for ``type``
 
