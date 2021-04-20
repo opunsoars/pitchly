@@ -42,6 +42,7 @@ setup(
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
+        "Intended Audience :: Science/Research",
         'License :: OSI Approved :: MIT License',
         'Operating System :: Unix',
         'Operating System :: POSIX',
@@ -59,7 +60,7 @@ setup(
         # 'Programming Language :: Python :: Implementation :: IronPython',
         # 'Programming Language :: Python :: Implementation :: Jython',
         # 'Programming Language :: Python :: Implementation :: Stackless',
-        'Topic :: Utilities',
+        'Topic :: Scientific/Engineering',
     ],
     project_urls={
         'Documentation': 'https://pitchly.readthedocs.io/',
@@ -72,6 +73,12 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         # eg: 'aspectlib==1.1.1', 'six>=1.7',
+        'tqdm==4.50.2',
+        'scipy>=1.5.2',
+        'Jinja2>=2.11.2',
+        'plotly>=4.14.3',
+        'pandas>=1.1.3',
+        'numpy>=1.19.2',
     ],
     extras_require={
         # eg:
