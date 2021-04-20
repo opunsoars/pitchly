@@ -15,31 +15,32 @@ Data Loading
 ============
 
 
-``kloppy`` and ``codeball`` are used to load the tracking and event data from Metrica. Click `here <https://github.com/metrica-sports/sample-data>`_ for the sample open data
+``kloppy`` is used to load the tracking and event data from Metrica. Click `here <https://github.com/metrica-sports/sample-data>`_ for the sample open data
 
 .. code-block:: python
     :linenos:
+
+    import glob
+    import kloppy
 
     # match directory
     match_dir = "/match/folder/with/metrica/data/"
 
     # tracking data [METRICA]
-    from codeball import GameDataset
+    metadata_file = glob.glob(f"{match_dir}/*metadata*")[0]  # xml file
+    tracking_file = glob.glob(f"{match_dir}/*tracking*")[0]  # txt file
 
-    metadata_file = (glob.glob(f"{match_dir}/*metadata*")[0]) #xml file
-    tracking_file = (glob.glob(f"{match_dir}/*tracking*")[0]) #txt file
-
-    tracking_dataset = GameDataset(
-        tracking_metadata_file=metadata_file,
-        tracking_data_file=tracking_file
-    )
+    dataset = kloppy.load_epts_tracking_data(raw_data_filename=tracking_file, metadata_filename=metadata_file, options=None)
+    
+    metadata = dataset.metadata
+    tracking_dataset = kloppy.to_pandas(dataset)
 
     # event data [METRICA]
-    from kloppy.helpers import load_metrica_json_event_data
+    events_file = glob.glob(f"{match_dir}/*events*")[0]  # txt file
 
-    event_dataset = load_metrica_json_event_data(raw_data_filename=glob.glob(f"{match_dir}/*json")[0],
-                                                metadata_filename=glob.glob(f"{match_dir}/*metadata*")[0], 
-                                                options=None) 
+    event_dataset = kloppy.load_metrica_json_event_data(
+        raw_data_filename=events_file, metadata_filename=metadata_file, options=None
+    )
 
 
 Tracking Data
@@ -52,7 +53,7 @@ Tracking Data
     from pitchly.metrica import TrackingData
 
     # feed the loaded data 
-    data = TrackingData(tracking_dataset.tracking,tracking_dataset.metadata)
+    data = TrackingData(tracking_dataset,metadata)
 
 Plot Frame by FrameID
 ^^^^^^^^^^^^^^^^^^^^^

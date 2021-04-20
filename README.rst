@@ -121,5 +121,5 @@ Acknowledgements
 
 * `David Sumpter <https://twitter.com/Soccermatics>`_ - for the amazing Friends of Tracking initiative
 * `Laurie Shaw <https://twitter.com/eightyfivepoint>`_ for starter code for data processing
-* `Bruno Dagnino <https://twitter.com/brunodagnino>`_ & `Metrica Sports <https://twitter.com/metricasports>`_ - for the open data (especially tracking) and codeball/kloppy libraries
-* `Koen Vossen <https://twitter.com/mr_le_fox>`_ - for codeball/kloppy libraries and inspiring work in open source football analytics
+* `Bruno Dagnino <https://twitter.com/brunodagnino>`_ & `Metrica Sports <https://twitter.com/metricasports>`_ - for the open data (especially tracking)
+* `Koen Vossen <https://twitter.com/mr_le_fox>`_ - for kloppy library and inspiring work in open source football analytics
