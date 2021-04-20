@@ -31,7 +31,7 @@ Data Loading
     tracking_file = glob.glob(f"{match_dir}/*tracking*")[0]  # txt file
 
     dataset = kloppy.load_epts_tracking_data(raw_data_filename=tracking_file, metadata_filename=metadata_file, options=None)
-    
+
     metadata = dataset.metadata
     tracking_dataset = kloppy.to_pandas(dataset)
 
@@ -268,3 +268,30 @@ In order to know the index, you can browse the subset of choice using a ``kloppy
 .. code-block:: python
 
     kloppy.to_pandas(data.get_shots(),additional_columns={'index_to_plot':lambda row: row.raw_event['index']})
+
+
+Old Metrica Format (csv)
+========================
+
+The older samples of Metrica data follow the ``.csv`` format and they can be loaded and used with ``pitchly`` in the following way:
+
+.. code-block:: python
+    :linenos:
+
+    import glob
+    from pitchly.utils import load_data
+    from pitchly.metrica_old import TrackingData,EventData
+
+    # match directory
+    match_dir = "/match/folder/with/metrica/data/"
+
+    # load the data 
+    tracking_home, tracking_away, events = load_data(match_dir)
+
+    # tracking
+    data = TrackingData(tracking_home, tracking_away)
+    data.plot_sequence(...)
+
+    # events
+    data = data = EventData(events)
+    data.plot(type="shots", trace=True)
