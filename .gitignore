@@ -76,5 +76,6 @@ docs/_build
 # private files
 .ipynb_checkpoints/
 testing.ipynb
+pctl.ipynb
 play.py
 STEPS.md
