@@ -4,13 +4,7 @@ import plotly.graph_objects as go
 from scipy import signal
 from tqdm.auto import tqdm
 
-# from src.pitchly.params import FIELD_HEIGHT
-# from src.pitchly.params import FIELD_MARKINGS_COLOR
-# from src.pitchly.params import FIELD_WIDTH
-# from src.pitchly.params import event_player_marker_args
-# from src.pitchly.params import FIELD_COLOR
-from src.pitchly.params import FIELD_DIM
-from src.pitchly.params import player_marker_args
+from src.pitchly.params import prm
 from src.pitchly.pitch import Pitch
 from src.pitchly.pitch_control import generate_pitch_control_for_frame
 
@@ -36,7 +30,7 @@ class TrackingData:
         data = self.flip_second_half_direction(data)
         self.data = data
 
-    def metric_coords(self, data, field_dimen=FIELD_DIM):
+    def metric_coords(self, data, field_dimen=prm.field_dim):
         x_columns = [c for c in data.columns if c.endswith("_x")]
         y_columns = [c for c in data.columns if c.endswith("_y")]
         data[x_columns] = (data[x_columns] - 0.5) * field_dimen[0]
@@ -55,19 +49,22 @@ class TrackingData:
     ):
         # Get the player ids
         player_ids = self.home_players + self.away_players
-        # Calculate the timestep from one frame to the next. Should always be 0.04 within the same half
+        # Calculate the timestep from one frame to the next.
+        # Should always be 0.04 within the same half
         dt = data.timestamp.diff()
 
         # index of first frame in second half
         second_half_idx = data.period_id.idxmax(2)
         # estimate velocities for players in team
         for player in player_ids:  # cycle through players individually
-            # difference player positions in timestep dt to get unsmoothed estimate of velicity
+            # difference player positions in timestep dt to get unsmoothed
+            # estimate of velicity
             vx = data[player + "_x"].diff() / dt
             vy = data[player + "_y"].diff() / dt
 
             if maxspeed > 0:
-                # remove unsmoothed data points that exceed the maximum speed (these are most likely position errors)
+                # remove unsmoothed data points that exceed the maximum speed
+                # (these are most likely position errors)
                 raw_speed = np.sqrt(vx ** 2 + vy ** 2)
                 vx[raw_speed > maxspeed] = np.nan
                 vy[raw_speed > maxspeed] = np.nan
@@ -113,7 +110,8 @@ class TrackingData:
                         vy.iloc[second_half_idx:], ma_window, mode="same"
                     )
 
-            # put player speed in x,y direction, and total speed back in the data frame
+            # put player speed in x,y direction, and total speed back in the
+            # data frame
             data[player + "_vx"] = vx
             data[player + "_vy"] = vy
             data[player + "_speed"] = np.sqrt(vx ** 2 + vy ** 2)
@@ -122,7 +120,8 @@ class TrackingData:
 
     def flip_second_half_direction(self, data):
         """
-        Flip coordinates in second half so that each team always shoots in the same direction through the match.
+        Flip coordinates in second half so that each team always shoots in
+        the same direction through the match.
         """
         second_half_idx = data.period_id.idxmax(2)
         columns = [c for c in data.columns if c[-1] in ["X", "y"]]
@@ -208,7 +207,7 @@ class TrackingData:
                 x=xlocs,
                 y=ylocs,
                 text=jerseys[i],
-                **player_marker_args[side],
+                **prm.player_marker_args[side],
                 name=side,
             )
             position_traces.append(traces)
@@ -231,7 +230,7 @@ class TrackingData:
                 u=xvels,
                 v=yvels,
                 scale=0.5,
-                line_color=player_marker_args[side]["marker_color"],
+                line_color=prm.player_marker_args[side]["marker_color"],
                 name=side + "_vel",
             )
             velocity_quivers.append(trace.data[0])
@@ -244,9 +243,9 @@ class TrackingData:
             y=[frame_data["ball_y"]],
             marker_size=10,
             marker_opacity=0.8,
-            marker_color="black",
+            marker_color="white",
             marker_line_width=2,
-            marker_line_color="green",
+            marker_line_color="black",
             name="ball",
         )
 
@@ -263,7 +262,8 @@ class TrackingData:
         """Combines various traces for required plot and returns it
 
         Args:
-            velocities (bool, optional): If True, velocity quivers will be added. Defaults to True.
+            velocities (bool, optional): If True, velocity quivers will be added.
+            Defaults to True.
             ball (bool, optional): If True, ball trace is added. Defaults to True.
         """
         frame_data = self.get_frame_data(frameID)
@@ -315,11 +315,15 @@ class TrackingData:
         if time:
             seconds = self.get_timestamp(time)
             frameID = self.get_frameID_from_timestamp(seconds)
+            if ":" in time:
+                time = f"{time.split(':')[0]}' {time.split(':')[1]}\""
+            title = f"Time: [{time}'] | FrameID: {frameID}"
+
         else:
             seconds = self.data.loc[frameID, "timestamp"]
             time = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
+            title = f"Time: [{time}] | FrameID: {frameID}"
 
-        title = f"Time: [{time}] | FrameID: {frameID}"
         data = self.get_traces(
             frameID=frameID,
             pitch_control=pitch_control,
@@ -327,7 +331,7 @@ class TrackingData:
             ball=plot_ball,
         )
         pitch = Pitch()
-        return pitch.plot_freeze_frame(data, title)
+        return pitch.plot_freeze_frame(data, title, pitch_control)
 
     def plot_sequence(
         self,
@@ -346,13 +350,17 @@ class TrackingData:
 
             f0 = self.get_frameID_from_timestamp(t0)
             f1 = self.get_frameID_from_timestamp(t1)
+
+            if ":" in t0:
+                t0 = f"{t0.split(':')[0]}' {t0.split(':')[1]}\""
+            title = f"Time: [{t0}'] | FrameID: {f0} to {f1}"
         else:
             seconds = self.data.loc[f0, "timestamp"]
             t0 = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
+            title = f"Time: [{t0}] | FrameID: {f0} to {f1}"
 
         frame_range = range(f0, f1)
 
-        title = f"Time: [{t0}] | FrameID: {f0} to {f1}"
         data = self.get_traces(
             frameID=f0, pitch_control=pitch_control, velocities=show_velocities
         )

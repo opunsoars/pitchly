@@ -2,18 +2,9 @@ import glob
 
 import numpy as np
 import pandas as pd
-
-# import plotly.graph_objects as go
 import scipy.signal as signal
 
-# from src.pitchly.params import FIELD_COLOR
-from src.pitchly.params import FIELD_DIM
-
-# from collections import namedtuple
-# from src.pitchly.params import FIELD_HEIGHT
-# from src.pitchly.params import FIELD_MARKINGS_COLOR
-# from src.pitchly.params import FIELD_WIDTH
-# from src.pitchly.params import player_marker_args
+from src.pitchly.params import prm
 
 match_dir = "/media/opunsoars/My Book/playground/friends_of_tracking/friends_of_tracking/\
     datahub/metrica_sports/sample-data/data/Sample_Game_1"
@@ -41,7 +32,7 @@ def modify_cols(tracking_df):
     return tracking_df
 
 
-def convert_to_metric_coords(data, field_dimen=FIELD_DIM):
+def convert_to_metric_coords(data, field_dimen=prm.field_dim):
     """
     Convert positions from Metrica units to meters (with origin at centre circle)
     """

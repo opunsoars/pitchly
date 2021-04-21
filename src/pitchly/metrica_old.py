@@ -5,13 +5,7 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from tqdm.auto import tqdm
 
-# from src.pitchly.params import FIELD_COLOR
-# from src.pitchly.params import FIELD_DIM
-# from src.pitchly.params import FIELD_HEIGHT
-# from src.pitchly.params import FIELD_MARKINGS_COLOR
-# from src.pitchly.params import FIELD_WIDTH
-from src.pitchly.params import event_player_marker_args
-from src.pitchly.params import player_marker_args
+from src.pitchly.params import prm
 from src.pitchly.pitch import Pitch
 
 
@@ -62,7 +56,7 @@ class TrackingData:
                 x=xlocs,
                 y=ylocs,
                 text=player_nums,
-                **player_marker_args[side],
+                **prm.player_marker_args[side],
                 name=side,
             )
             position_traces.append(traces)
@@ -104,7 +98,7 @@ class TrackingData:
                 u=xvels,
                 v=yvels,
                 scale=0.5,
-                line_color=player_marker_args[side]["marker_color"],
+                line_color=prm.player_marker_args[side]["marker_color"],
                 name=side + "_vel",
             )
             velocity_quivers.append(trace.data[0])
@@ -346,7 +340,7 @@ class EventData:
                 y=y,
                 text=player_nums,
                 name=row["Type"],
-                **event_player_marker_args[side],
+                **prm.event_player_marker_args[side],
             )
         )
 
@@ -358,7 +352,7 @@ class EventData:
                     text=[row["To_num"]],
                     name="DRIBBLE",
                     line_dash="dash",
-                    **event_player_marker_args[side],
+                    **prm.event_player_marker_args[side],
                 )
             )
 
