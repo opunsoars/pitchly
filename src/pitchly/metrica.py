@@ -12,6 +12,7 @@ from tqdm.auto import tqdm
 from src.pitchly.params import FIELD_DIM
 from src.pitchly.params import player_marker_args
 from src.pitchly.pitch import Pitch
+from src.pitchly.pitch_control import generate_pitch_control_for_frame
 
 
 class TrackingData:
@@ -114,6 +115,51 @@ class TrackingData:
 
         return frame_data
 
+    def get_home_cols(self, frame_data):
+        home_cols = []
+        for player in self.home_players:
+            for col in frame_data.keys():
+                if col.startswith(player):
+                    home_cols.append(col)
+        return home_cols
+
+    def get_away_cols(self, frame_data):
+        away_cols = []
+        for player in self.away_players:
+            for col in frame_data.keys():
+                if col.startswith(player):
+                    away_cols.append(col)
+        return away_cols
+
+    def get_team_pitch_control_traces(self, frame_data, player_num=None):
+        pitch_control_dict = generate_pitch_control_for_frame(
+            frame_data, self.get_home_cols(frame_data), self.get_away_cols(frame_data)
+        )
+        if player_num:
+            surface = pitch_control_dict["PPCFa_pax"][str(player_num)]
+        else:
+            surface = pitch_control_dict["PPCFa"]
+
+        trace = go.Heatmap(
+            z=surface,
+            x=pitch_control_dict["xgrid"],
+            y=pitch_control_dict["ygrid"],
+            colorscale="RdBu_r",
+            opacity=0.8,
+            zsmooth="best",
+            zmin=0.0,
+            zmax=1.0,
+            # showlegend=False,
+            colorbar={"len": 0.3, "thickness": 10, "x": 0.9},
+            showscale=False,
+        )
+        # trace = go.Surface(
+        # z=surface,
+        # colorscale='RdBu_r', opacity=0.8,
+        # cmin=0, cmax=1
+        # )
+        return [trace]
+
     def position_traces(self, frame_data):
         player_ids = (self.home_players, self.away_players)
         jerseys = (self.home_jerseys, self.away_jerseys)
@@ -166,7 +212,7 @@ class TrackingData:
 
         return ball_trace
 
-    def get_traces(self, frameID=None, velocities=True, ball=True):
+    def get_traces(self, frameID=None, pitch_control=False, velocities=True, ball=True, player_num=None):
         """Combines various traces for required plot and returns it
 
         Args:
@@ -176,6 +222,9 @@ class TrackingData:
         frame_data = self.get_frame_data(frameID)
 
         traces = []
+        if pitch_control:
+            traces.extend(self.get_team_pitch_control_traces(frame_data, player_num=player_num))
+
         if velocities:
             traces.extend(self.velocity_traces(frame_data))
 
@@ -186,17 +235,24 @@ class TrackingData:
 
         return traces
 
-    def get_frames(self, frame_range, velocities=True, ball=True):
+    def get_frames(self, frame_range, pitch_control=False, velocities=True, ball=True):
 
         frames = []
         for frameID in tqdm(frame_range):
-            frame = {"data": [], "name": str(frameID)}
-            frame["data"].extend(self.get_traces(frameID, velocities, ball))
-            frames.append(frame)
+            data_ = self.get_traces(frameID, pitch_control, velocities, ball)
+            name_ = f"f{frameID}"
+            frames.append(go.Frame(data= data_,name= name_))
+
+            
+            # frame = {"data": [], "name": str(frameID)}
+            # frame["data"].extend(self.get_traces(frameID, pitch_control, velocities, ball))
+            # frames.append(frame)
 
         return frames
 
-    def plot_frame(self, frameID=None, time=None, plot_ball=True, show_velocities=False):
+    def plot_frame(
+        self, frameID=None, time=None, pitch_control=False, plot_ball=True, show_velocities=False, player_num=None
+    ):
 
         if time:
             seconds = self.get_timestamp(time)
@@ -206,11 +262,13 @@ class TrackingData:
             time = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
 
         title = f"Time: [{time}] | FrameID: {frameID}"
-        data = self.get_traces(frameID=frameID, velocities=show_velocities, ball=plot_ball)
+        data = self.get_traces(frameID=frameID, pitch_control=pitch_control, velocities=show_velocities, ball=plot_ball)
         pitch = Pitch()
         return pitch.plot_freeze_frame(data, title)
 
-    def plot_sequence(self, f0=None, f1=None, t0=None, t1=None, show_velocities=True, player_num=None):
+    def plot_sequence(
+        self, f0=None, f1=None, t0=None, t1=None, pitch_control=False, show_velocities=True, player_num=None
+    ):
 
         if t1:
             t0 = self.get_timestamp(t0)
@@ -225,10 +283,10 @@ class TrackingData:
         frame_range = range(f0, f1)
 
         title = f"Time: [{t0}] | FrameID: {f0} to {f1}"
-        data = self.get_traces(frameID=f0, velocities=show_velocities)
-        frames = self.get_frames(frame_range, velocities=show_velocities)
+        data = self.get_traces(frameID=f0, pitch_control=pitch_control, velocities=show_velocities)
+        frames = self.get_frames(frame_range, pitch_control=pitch_control, velocities=show_velocities)
         pitch = Pitch()
-        return pitch.plot_frames_sequence(data, frames, frame_range, title)
+        return pitch.plot_frames_sequence(data, frames, frame_range, title, pitch_control)
 
 
 class EventData:

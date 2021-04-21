@@ -33,7 +33,7 @@ class Pitch:
         self.point = namedtuple("point", ["x", "y"])
         self.centre = self.point(0.0, 0.0)
 
-    def get_layout(self, time=None, frameID=None, frame_range=None, title=None):
+    def get_layout(self, time=None, frameID=None, frame_range=None, title=None, pitch_control=False):
         shapes = []
 
         mid_circle = dict(
@@ -201,7 +201,11 @@ class Pitch:
         layout["shapes"] = shapes
 
         if frame_range:
-            layout["sliders"], layout["updatemenus"] = self.add_controls(frame_range)
+            if pitch_control:
+                layout["updatemenus"], layout["sliders"] = self.add_pc_controls(frame_range)
+            else:
+                layout["updatemenus"], layout["sliders"] = self.add_controls(frame_range)
+
             layout["title"] = None
             layout["margin"]["b"] = 100
 
@@ -219,17 +223,94 @@ class Pitch:
         fig = go.Figure(fig_dict)
         fig.show()
 
-    def plot_frames_sequence(self, data, frames, frame_range, title):
+    def plot_frames_sequence(self, data, frames, frame_range, title, pitch_control):
         fig_dict = {"data": [], "layout": {}, "frames": []}
 
-        fig_dict["layout"] = self.get_layout(frame_range=frame_range, title=title)
+        fig_dict["layout"] = self.get_layout(frame_range=frame_range, title=title, pitch_control=pitch_control)
         fig_dict["data"] = data
         fig_dict["frames"] = frames
 
         fig = go.Figure(fig_dict)
         fig.show()
 
+        return frames
+
+    def add_pc_controls(self, frames_to_track):
+
+        sliders_dict = {
+            "active": 0,
+            # "yanchor": "top",
+            # "xanchor": "left",
+            "currentvalue": {"font": {"size": 20}, "prefix": "Frame:", "visible": True, "xanchor": "right"},
+            "transition": {"duration": 0, "easing": "cubic-in-out"},
+            "pad": {"b": 0, "t": 0},
+            # "len": 0.9,
+            # "x": 0.1,
+            # "y": 0,
+            "steps": [],
+        }
+
+        for frameID in frames_to_track:
+            slider_step = {
+                "args": [
+                    [f"f{frameID}"],
+                    {
+                        "frame": {"duration": 0, "redraw": True},
+                        "mode": "immediate",
+                        "transition": {
+                            "duration": 0,
+                            # "easing": "linear"
+                        },
+                    },
+                ],
+                "label": frameID,
+                "method": "animate",
+            }
+            sliders_dict["steps"].append(slider_step)
+
+        updatemenus = {
+            "buttons": [
+                {
+                    "args": [
+                        None,
+                        {
+                            "frame": {"duration": 0, "redraw": False},
+                            "fromcurrent": True,
+                            "mode": "immediate",
+                            "transition": {"duration": 0, "easing": "linear"},
+                        },
+                    ],
+                    "label": ">",
+                    "method": "animate",
+                },
+                {
+                    "args": [
+                        [None],
+                        {
+                            "frame": {"duration": 0, "redraw": False},
+                            "mode": "immediate",
+                            "transition": {"duration": 0},
+                        },
+                    ],
+                    "label": "||",
+                    "method": "animate",
+                },
+            ],
+            "direction": "left",
+            # "font":{"size":10},
+            # "pad": {"r": 40, "t": 50},
+            "showactive": False,
+            "type": "buttons",
+            "xanchor": "right",
+            "yanchor": "top",
+            "x": 0.1,
+            "y": 0,
+        }
+
+        return [updatemenus], [sliders_dict]
+
     def add_controls(self, frames_to_track):
+
         sliders_dict = {
             "active": 0,
             #     "yanchor": "top",
@@ -246,7 +327,7 @@ class Pitch:
         for frameID in frames_to_track:
             slider_step = {
                 "args": [
-                    [frameID],
+                    [f"f{frameID}"],
                     {
                         "frame": {"duration": 300, "redraw": False},
                         "mode": "immediate",
@@ -293,7 +374,7 @@ class Pitch:
             "y": 0,
         }
 
-        return [sliders_dict], [updatemenus]
+        return [updatemenus],[sliders_dict]
 
     def plot_event(self, data, title):
         fig_dict = {"data": [], "layout": {}, "frames": []}
