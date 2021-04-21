@@ -8,8 +8,8 @@ Created on Mon Apr 19 14:52:19 2020
 
 Module for calculating a Pitch Control surface using MetricaSports's tracking & event data.
 
-Pitch control (at a given location on the field) is the probability that a team will gain 
-possession if the ball is moved to that location on the field. 
+Pitch control (at a given location on the field) is the probability that a team will gain
+possession if the ball is moved to that location on the field.
 
 Methdology is described in "Off the ball scoring opportunities" by William Spearman:
 http://www.sloansportsconference.com/wp-content/uploads/2018/02/2002.pdf
@@ -22,15 +22,18 @@ Data can be found at: https://github.com/metrica-sports/sample-data
 Functions
 ----------
 
-calculate_pitch_control_at_target(): calculate the pitch control probability for the attacking and defending teams at a specified target position on the ball.
+calculate_pitch_control_at_target(): calculate the pitch control probability for the attacking
+and defending teams at a specified target position on the ball.
 
-generate_pitch_control_for_event(): this function evaluates pitch control surface over the entire field at the moment
+generate_pitch_control_for_event(): this function evaluates pitch control surface over the
+entire field at the moment
 of the given event (determined by the index of the event passed as an input)
 
 Classes
 ---------
 
-The 'player' class collects and stores trajectory information for each player required by the pitch control calculations.
+The 'player' class collects and stores trajectory information for each player required by the
+pitch control calculations.
 
 @author: Laurie Shaw (@EightyFivePoint)
 
@@ -108,11 +111,15 @@ class player(object):
         self.PPCF = 0.0  # initialise this for later
 
     def get_position(self, frame_data):
-        self.position = np.array([frame_data[f"{self.id}_x"], frame_data[f"{self.id}_y"]])
+        self.position = np.array(
+            [frame_data[f"{self.id}_x"], frame_data[f"{self.id}_y"]]
+        )
         self.inframe = not np.any(np.isnan(self.position))
 
     def get_velocity(self, frame_data):
-        self.velocity = np.array([frame_data[f"{self.id}_vx"], frame_data[f"{self.id}_vy"]])
+        self.velocity = np.array(
+            [frame_data[f"{self.id}_vx"], frame_data[f"{self.id}_vy"]]
+        )
         if np.any(np.isnan(self.velocity)):
             self.velocity = np.array([0.0, 0.0])
 
@@ -121,12 +128,24 @@ class player(object):
         # Time to intercept assumes that the player continues moving at current velocity for 'reaction_time' seconds
         # and then runs at full speed to the target position.
         r_reaction = self.position + self.velocity * self.reaction_time
-        self.time_to_intercept = self.reaction_time + np.linalg.norm(r_final - r_reaction) / self.vmax
+        self.time_to_intercept = (
+            self.reaction_time
+            + np.linalg.norm(r_final - r_reaction) / self.vmax
+        )
         return self.time_to_intercept
 
     def probability_intercept_ball(self, T):
-        # probability of a player arriving at target location at time 'T' given their expected time_to_intercept (time of arrival), as described in Spearman 2018
-        f = 1 / (1.0 + np.exp(-np.pi / np.sqrt(3.0) / self.tti_sigma * (T - self.time_to_intercept)))
+        # probability of a player arriving at target location at time 'T' given their expected
+        # time_to_intercept (time of arrival), as described in Spearman 2018
+        f = 1 / (
+            1.0
+            + np.exp(
+                -np.pi
+                / np.sqrt(3.0)
+                / self.tti_sigma
+                * (T - self.time_to_intercept)
+            )
+        )
         return f
 
 
@@ -153,7 +172,9 @@ def default_model_params(time_to_control_veto=3):
     # key parameters for the model, as described in Spearman 2018
     params = {}
     # model parameters
-    params["max_player_accel"] = 7.0  # maximum player acceleration m/s/s, not used in this implementation
+    params[
+        "max_player_accel"
+    ] = 7.0  # maximum player acceleration m/s/s, not used in this implementation
     params["max_player_speed"] = 5.0  # maximum player speed m/s
     # seconds, time taken for player to react and change trajectory. Roughly determined as vmax/amax
     params["reaction_time"] = 0.7
@@ -173,10 +194,14 @@ def default_model_params(time_to_control_veto=3):
     # The following are 'short-cut' parameters. We do not need to calculated PPCF explicitly when a player has a sufficient head start.
     # A sufficient head start is when the a player arrives at the target location at least 'time_to_control' seconds before the next player
     params["time_to_control_att"] = (
-        time_to_control_veto * np.log(10) * (np.sqrt(3) * params["tti_sigma"] / np.pi + 1 / params["lambda_att"])
+        time_to_control_veto
+        * np.log(10)
+        * (np.sqrt(3) * params["tti_sigma"] / np.pi + 1 / params["lambda_att"])
     )
     params["time_to_control_def"] = (
-        time_to_control_veto * np.log(10) * (np.sqrt(3) * params["tti_sigma"] / np.pi + 1 / params["lambda_def"])
+        time_to_control_veto
+        * np.log(10)
+        * (np.sqrt(3) * params["tti_sigma"] / np.pi + 1 / params["lambda_def"])
     )
     return params
 
@@ -217,21 +242,35 @@ def generate_pitch_control_for_event(
     pass_frame = events.loc[event_id]["Start Frame"]
     pass_team = events.loc[event_id].Team
     # print(pass_team)
-    ball_start_pos = np.array([events.loc[event_id]["Start X"], events.loc[event_id]["Start Y"]])
+    ball_start_pos = np.array(
+        [events.loc[event_id]["Start X"], events.loc[event_id]["Start Y"]]
+    )
     # break the pitch down into a grid
     n_grid_cells_y = int(n_grid_cells_x * field_dimen[1] / field_dimen[0])
-    xgrid = np.linspace(-field_dimen[0] / 2.0, field_dimen[0] / 2.0, n_grid_cells_x)
-    ygrid = np.linspace(-field_dimen[1] / 2.0, field_dimen[1] / 2.0, n_grid_cells_y)
+    xgrid = np.linspace(
+        -field_dimen[0] / 2.0, field_dimen[0] / 2.0, n_grid_cells_x
+    )
+    ygrid = np.linspace(
+        -field_dimen[1] / 2.0, field_dimen[1] / 2.0, n_grid_cells_y
+    )
     # initialise pitch control grids for attacking and defending teams
     PPCFa = np.zeros(shape=(len(ygrid), len(xgrid)))
     PPCFd = np.zeros(shape=(len(ygrid), len(xgrid)))
     # initialise player positions and velocities for pitch control calc (so that we're not repeating this at each grid cell position)
     if pass_team == "Home":
-        attacking_players = initialise_players(tracking_home.loc[pass_frame], "Home", params)
-        defending_players = initialise_players(tracking_away.loc[pass_frame], "Away", params)
+        attacking_players = initialise_players(
+            tracking_home.loc[pass_frame], "Home", params
+        )
+        defending_players = initialise_players(
+            tracking_away.loc[pass_frame], "Away", params
+        )
     elif pass_team == "Away":
-        defending_players = initialise_players(tracking_home.loc[pass_frame], "Home", params)
-        attacking_players = initialise_players(tracking_away.loc[pass_frame], "Away", params)
+        defending_players = initialise_players(
+            tracking_home.loc[pass_frame], "Home", params
+        )
+        attacking_players = initialise_players(
+            tracking_away.loc[pass_frame], "Away", params
+        )
     else:
         assert False, "Team in possession must be either home or away"
     # calculate pitch pitch control model at each location on the pitch
@@ -239,11 +278,17 @@ def generate_pitch_control_for_event(
         for j in range(len(xgrid)):
             target_position = np.array([xgrid[j], ygrid[i]])
             PPCFa[i, j], PPCFd[i, j] = calculate_pitch_control_at_target(
-                target_position, attacking_players, defending_players, ball_start_pos, params
+                target_position,
+                attacking_players,
+                defending_players,
+                ball_start_pos,
+                params,
             )
     # check probabilitiy sums within convergence
     checksum = np.sum(PPCFa + PPCFd) / float(n_grid_cells_y * n_grid_cells_x)
-    assert 1 - checksum < params["model_converge_tol"], "Checksum failed: %1.3f" % (1 - checksum)
+    assert (
+        1 - checksum < params["model_converge_tol"]
+    ), "Checksum failed: %1.3f" % (1 - checksum)
     return PPCFa, xgrid, ygrid
 
 
@@ -279,31 +324,50 @@ def calculate_pitch_control_at_target(
         ball_travel_time = 0.0
     else:
         # ball travel time is distance to target position from current ball position divided assumed average ball speed
-        ball_travel_time = np.linalg.norm(target_position - ball_start_pos) / params["average_ball_speed"]
+        ball_travel_time = (
+            np.linalg.norm(target_position - ball_start_pos)
+            / params["average_ball_speed"]
+        )
 
     # first get arrival time of 'nearest' attacking player (nearest also dependent on current velocity)
-    tau_min_att = np.nanmin([p.simple_time_to_intercept(target_position) for p in attacking_players])
-    tau_min_def = np.nanmin([p.simple_time_to_intercept(target_position) for p in defending_players])
+    tau_min_att = np.nanmin(
+        [p.simple_time_to_intercept(target_position) for p in attacking_players]
+    )
+    tau_min_def = np.nanmin(
+        [p.simple_time_to_intercept(target_position) for p in defending_players]
+    )
 
     # check whether we actually need to solve equation 3
-    if tau_min_att - max(ball_travel_time, tau_min_def) >= params["time_to_control_def"]:
+    if (
+        tau_min_att - max(ball_travel_time, tau_min_def)
+        >= params["time_to_control_def"]
+    ):
         # if defending team can arrive significantly before attacking team, no need to solve pitch control model
         return 0.0, 1.0
-    elif tau_min_def - max(ball_travel_time, tau_min_att) >= params["time_to_control_att"]:
+    elif (
+        tau_min_def - max(ball_travel_time, tau_min_att)
+        >= params["time_to_control_att"]
+    ):
         # if attacking team can arrive significantly before defending team, no need to solve pitch control model
         return 1.0, 0.0
     else:
         # solve pitch control model by integrating equation 3 in Spearman et al.
         # first remove any player that is far (in time) from the target location
         attacking_players = [
-            p for p in attacking_players if p.time_to_intercept - tau_min_att < params["time_to_control_att"]
+            p
+            for p in attacking_players
+            if p.time_to_intercept - tau_min_att < params["time_to_control_att"]
         ]
         defending_players = [
-            p for p in defending_players if p.time_to_intercept - tau_min_def < params["time_to_control_def"]
+            p
+            for p in defending_players
+            if p.time_to_intercept - tau_min_def < params["time_to_control_def"]
         ]
         # set up integration arrays
         dT_array = np.arange(
-            ball_travel_time - params["int_dt"], ball_travel_time + params["max_int_time"], params["int_dt"]
+            ball_travel_time - params["int_dt"],
+            ball_travel_time + params["max_int_time"],
+            params["int_dt"],
         )
         PPCFatt = np.zeros_like(dT_array)
         PPCFdef = np.zeros_like(dT_array)
@@ -317,10 +381,14 @@ def calculate_pitch_control_at_target(
             for player in attacking_players:
                 # calculate ball control probablity for 'player' in time interval T+dt
                 dPPCFdT = (
-                    (1 - PPCFatt[i - 1] - PPCFdef[i - 1]) * player.probability_intercept_ball(T) * params["lambda_att"]
+                    (1 - PPCFatt[i - 1] - PPCFdef[i - 1])
+                    * player.probability_intercept_ball(T)
+                    * params["lambda_att"]
                 )
                 # make sure it's greater than zero
-                assert dPPCFdT >= 0, "Invalid attacking player probability (calculate_pitch_control_at_target)"
+                assert (
+                    dPPCFdT >= 0
+                ), "Invalid attacking player probability (calculate_pitch_control_at_target)"
                 # total contribution from individual player
                 player.PPCF += dPPCFdT * params["int_dt"]
                 # add to sum over players in the attacking team (remembering array element is zero at the start of each integration iteration)
@@ -329,10 +397,14 @@ def calculate_pitch_control_at_target(
             for player in defending_players:
                 # calculate ball control probablity for 'player' in time interval T+dt
                 dPPCFdT = (
-                    (1 - PPCFatt[i - 1] - PPCFdef[i - 1]) * player.probability_intercept_ball(T) * params["lambda_def"]
+                    (1 - PPCFatt[i - 1] - PPCFdef[i - 1])
+                    * player.probability_intercept_ball(T)
+                    * params["lambda_def"]
                 )
                 # make sure it's greater than zero
-                assert dPPCFdT >= 0, "Invalid defending player probability (calculate_pitch_control_at_target)"
+                assert (
+                    dPPCFdT >= 0
+                ), "Invalid defending player probability (calculate_pitch_control_at_target)"
                 # total contribution from individual player
                 player.PPCF += dPPCFdT * params["int_dt"]
                 # add to sum over players in the defending team
@@ -392,8 +464,12 @@ def generate_pitch_control_for_frame(
 
     # break the pitch down into a grid
     n_grid_cells_y = int(n_grid_cells_x * field_dimen[1] / field_dimen[0])
-    xgrid = np.linspace(-field_dimen[0] / 2.0, field_dimen[0] / 2.0, n_grid_cells_x)
-    ygrid = np.linspace(-field_dimen[1] / 2.0, field_dimen[1] / 2.0, n_grid_cells_y)
+    xgrid = np.linspace(
+        -field_dimen[0] / 2.0, field_dimen[0] / 2.0, n_grid_cells_x
+    )
+    ygrid = np.linspace(
+        -field_dimen[1] / 2.0, field_dimen[1] / 2.0, n_grid_cells_y
+    )
 
     # initialise pitch control grids for attacking and defending teams
     PPCFa = np.zeros(shape=(len(ygrid), len(xgrid)))
@@ -401,12 +477,26 @@ def generate_pitch_control_for_frame(
 
     # pick only the columns representing players whose data is available for this match
     # Basically playerIDs that have data for this row/frame
-    homeplayers = [x.split("_")[0] for x in frame_data[[c for c in home_cols if c.endswith("_x")]].dropna().keys()]
-    awayplayers = [x.split("_")[0] for x in frame_data[[c for c in away_cols if c.endswith("_x")]].dropna().keys()]
+    homeplayers = [
+        x.split("_")[0]
+        for x in frame_data[[c for c in home_cols if c.endswith("_x")]]
+        .dropna()
+        .keys()
+    ]
+    awayplayers = [
+        x.split("_")[0]
+        for x in frame_data[[c for c in away_cols if c.endswith("_x")]]
+        .dropna()
+        .keys()
+    ]
 
     # initialise pitch control grids for individual players in attacking and defending teams
-    PPCFa_pax = {pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in homeplayers}
-    PPCFd_pax = {pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in awayplayers}
+    PPCFa_pax = {
+        pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in homeplayers
+    }
+    PPCFd_pax = {
+        pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in awayplayers
+    }
 
     # initialise player positions and velocities for pitch control calc (so that we're not repeating this at each grid cell position)
     if attacking == "Home":
@@ -449,12 +539,18 @@ def generate_pitch_control_for_frame(
                         PPCFd_pax[pid][i, j] = ppcf_pax
             else:
                 PPCFa[i, j], PPCFd[i, j] = calculate_pitch_control_at_target(
-                    target_position, attacking_players, defending_players, ball_start_pos, params
+                    target_position,
+                    attacking_players,
+                    defending_players,
+                    ball_start_pos,
+                    params,
                 )
 
     # check probabilitiy sums within convergence
     checksum = np.sum(PPCFa + PPCFd) / float(n_grid_cells_y * n_grid_cells_x)
-    assert 1 - checksum < params["model_converge_tol"], "Checksum failed: %1.3f" % (1 - checksum)
+    assert (
+        1 - checksum < params["model_converge_tol"]
+    ), "Checksum failed: %1.3f" % (1 - checksum)
 
     pitch_control_dict = dict()
     if return_individual == True:

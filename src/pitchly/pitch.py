@@ -2,7 +2,9 @@ from collections import namedtuple
 
 import plotly.graph_objects as go
 
-from src.pitchly.params import FIELD_COLOR  # event_player_marker_args,; player_marker_args,
+from src.pitchly.params import (
+    FIELD_COLOR,
+)  # event_player_marker_args,; player_marker_args,
 from src.pitchly.params import FIELD_DIM
 from src.pitchly.params import FIELD_HEIGHT
 from src.pitchly.params import FIELD_MARKINGS_COLOR
@@ -12,7 +14,10 @@ from src.pitchly.params import FIELD_WIDTH
 class Pitch:
     def __init__(self):
         # ALL DIMENSIONS IN m
-        self.border_dimen = (3, 3)  # include a border arround of the field of width 3m
+        self.border_dimen = (
+            3,
+            3,
+        )  # include a border arround of the field of width 3m
         self.meters_per_yard = 0.9144  # unit conversion from yards to meters
         self.half_pitch_length = FIELD_DIM[0] / 2.0  # length of half pitch
         self.half_pitch_width = FIELD_DIM[1] / 2.0  # width of half pitch
@@ -33,7 +38,14 @@ class Pitch:
         self.point = namedtuple("point", ["x", "y"])
         self.centre = self.point(0.0, 0.0)
 
-    def get_layout(self, time=None, frameID=None, frame_range=None, title=None, pitch_control=False):
+    def get_layout(
+        self,
+        time=None,
+        frameID=None,
+        frame_range=None,
+        title=None,
+        pitch_control=False,
+    ):
         shapes = []
 
         mid_circle = dict(
@@ -91,9 +103,13 @@ class Pitch:
 
             circle = dict(
                 type="circle",
-                x0=s * (self.centre.x + self.half_pitch_length - self.penalty_spot) - self.centre_circle_radius,
+                x0=s
+                * (self.centre.x + self.half_pitch_length - self.penalty_spot)
+                - self.centre_circle_radius,
                 y0=self.centre.y - self.centre_circle_radius,
-                x1=s * (self.centre.x + self.half_pitch_length - self.penalty_spot) + self.centre_circle_radius,
+                x1=s
+                * (self.centre.x + self.half_pitch_length - self.penalty_spot)
+                + self.centre_circle_radius,
                 y1=self.centre.y + self.centre_circle_radius,
                 line_color=FIELD_MARKINGS_COLOR,
                 layer="below",
@@ -161,7 +177,19 @@ class Pitch:
                 layer="below",
             )
 
-            shapes.extend([boundary1, boundary2, circle, patch, box, D, pen, top_post, bottom_post])
+            shapes.extend(
+                [
+                    boundary1,
+                    boundary2,
+                    circle,
+                    patch,
+                    box,
+                    D,
+                    pen,
+                    top_post,
+                    bottom_post,
+                ]
+            )
 
             # set axis limits
         xmax = FIELD_DIM[0] / 2.0 + self.border_dimen[0]
@@ -183,7 +211,11 @@ class Pitch:
             height=FIELD_HEIGHT,
             plot_bgcolor=FIELD_COLOR,
             xaxis=go.layout.XAxis(
-                range=[-xmax, xmax], showgrid=False, zeroline=False, showticklabels=False, visible=False
+                range=[-xmax, xmax],
+                showgrid=False,
+                zeroline=False,
+                showticklabels=False,
+                visible=False,
             ),
             yaxis=go.layout.YAxis(
                 range=[-ymax, ymax],
@@ -202,9 +234,13 @@ class Pitch:
 
         if frame_range:
             if pitch_control:
-                layout["updatemenus"], layout["sliders"] = self.add_pc_controls(frame_range)
+                layout["updatemenus"], layout["sliders"] = self.add_pc_controls(
+                    frame_range
+                )
             else:
-                layout["updatemenus"], layout["sliders"] = self.add_controls(frame_range)
+                layout["updatemenus"], layout["sliders"] = self.add_controls(
+                    frame_range
+                )
 
             layout["title"] = None
             layout["margin"]["b"] = 100
@@ -223,10 +259,14 @@ class Pitch:
         fig = go.Figure(fig_dict)
         fig.show()
 
-    def plot_frames_sequence(self, data, frames, frame_range, title, pitch_control):
+    def plot_frames_sequence(
+        self, data, frames, frame_range, title, pitch_control
+    ):
         fig_dict = {"data": [], "layout": {}, "frames": []}
 
-        fig_dict["layout"] = self.get_layout(frame_range=frame_range, title=title, pitch_control=pitch_control)
+        fig_dict["layout"] = self.get_layout(
+            frame_range=frame_range, title=title, pitch_control=pitch_control
+        )
         fig_dict["data"] = data
         fig_dict["frames"] = frames
 
@@ -241,7 +281,12 @@ class Pitch:
             "active": 0,
             # "yanchor": "top",
             # "xanchor": "left",
-            "currentvalue": {"font": {"size": 20}, "prefix": "Frame:", "visible": True, "xanchor": "right"},
+            "currentvalue": {
+                "font": {"size": 20},
+                "prefix": "Frame:",
+                "visible": True,
+                "xanchor": "right",
+            },
             "transition": {"duration": 0, "easing": "cubic-in-out"},
             "pad": {"b": 0, "t": 0},
             # "len": 0.9,
@@ -315,7 +360,12 @@ class Pitch:
             "active": 0,
             #     "yanchor": "top",
             #     "xanchor": "left",
-            "currentvalue": {"font": {"size": 20}, "prefix": "Frame:", "visible": True, "xanchor": "right"},
+            "currentvalue": {
+                "font": {"size": 20},
+                "prefix": "Frame:",
+                "visible": True,
+                "xanchor": "right",
+            },
             "transition": {"duration": 300, "easing": "cubic-in-out"},
             "pad": {"b": 0, "t": 0},
             #     "len": 0.9,
@@ -357,7 +407,11 @@ class Pitch:
                 {
                     "args": [
                         [None],
-                        {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}},
+                        {
+                            "frame": {"duration": 0, "redraw": False},
+                            "mode": "immediate",
+                            "transition": {"duration": 0},
+                        },
                     ],
                     "label": "||",
                     "method": "animate",
@@ -374,7 +428,7 @@ class Pitch:
             "y": 0,
         }
 
-        return [updatemenus],[sliders_dict]
+        return [updatemenus], [sliders_dict]
 
     def plot_event(self, data, title):
         fig_dict = {"data": [], "layout": {}, "frames": []}

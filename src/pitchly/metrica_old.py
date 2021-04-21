@@ -43,11 +43,28 @@ class TrackingData:
         for i, side in enumerate(["Home", "Away"]):
             team_data = frame_data[i]
             player_nums = list(
-                set(item for subitem in team_data.keys() for item in subitem.split("_") if item.isdigit())
+                set(
+                    item
+                    for subitem in team_data.keys()
+                    for item in subitem.split("_")
+                    if item.isdigit()
+                )
             )
-            xlocs = [team_data["{}_{}_{}".format(side, num, "X")] for num in player_nums]
-            ylocs = [team_data["{}_{}_{}".format(side, num, "Y")] for num in player_nums]
-            traces = go.Scatter(x=xlocs, y=ylocs, text=player_nums, **player_marker_args[side], name=side)
+            xlocs = [
+                team_data["{}_{}_{}".format(side, num, "X")]
+                for num in player_nums
+            ]
+            ylocs = [
+                team_data["{}_{}_{}".format(side, num, "Y")]
+                for num in player_nums
+            ]
+            traces = go.Scatter(
+                x=xlocs,
+                y=ylocs,
+                text=player_nums,
+                **player_marker_args[side],
+                name=side,
+            )
             position_traces.append(traces)
 
         return position_traces
@@ -58,12 +75,29 @@ class TrackingData:
         for i, side in enumerate(["Home", "Away"]):
             team_data = frame_data[i]
             player_nums = list(
-                set(item for subitem in team_data.keys() for item in subitem.split("_") if item.isdigit())
+                set(
+                    item
+                    for subitem in team_data.keys()
+                    for item in subitem.split("_")
+                    if item.isdigit()
+                )
             )
-            xlocs = [team_data["{}_{}_{}".format(side, num, "X")] for num in player_nums]
-            ylocs = [team_data["{}_{}_{}".format(side, num, "Y")] for num in player_nums]
-            xvels = [team_data["{}_{}_{}".format(side, num, "vx")] for num in player_nums]
-            yvels = [team_data["{}_{}_{}".format(side, num, "vy")] for num in player_nums]
+            xlocs = [
+                team_data["{}_{}_{}".format(side, num, "X")]
+                for num in player_nums
+            ]
+            ylocs = [
+                team_data["{}_{}_{}".format(side, num, "Y")]
+                for num in player_nums
+            ]
+            xvels = [
+                team_data["{}_{}_{}".format(side, num, "vx")]
+                for num in player_nums
+            ]
+            yvels = [
+                team_data["{}_{}_{}".format(side, num, "vy")]
+                for num in player_nums
+            ]
             trace = ff.create_quiver(
                 x=xlocs,
                 y=ylocs,
@@ -123,7 +157,9 @@ class TrackingData:
 
         return frames
 
-    def plot_frame(self, frameID=None, time=None, plot_ball=True, show_velocities=False):
+    def plot_frame(
+        self, frameID=None, time=None, plot_ball=True, show_velocities=False
+    ):
 
         if time:
             time = self.get_mins(time)
@@ -132,11 +168,21 @@ class TrackingData:
             time = self.tracking_home.loc[frameID, "mins"]
 
         title = f"Time: [{time}] | FrameID: {frameID}"
-        data = self.get_traces(frameID=frameID, velocities=show_velocities, ball=plot_ball)
+        data = self.get_traces(
+            frameID=frameID, velocities=show_velocities, ball=plot_ball
+        )
         pitch = Pitch()
         return pitch.plot_freeze_frame(data, title)
 
-    def plot_sequence(self, f0=None, f1=None, t0=None, t1=None, show_velocities=True, player_num=None):
+    def plot_sequence(
+        self,
+        f0=None,
+        f1=None,
+        t0=None,
+        t1=None,
+        show_velocities=True,
+        player_num=None,
+    ):
 
         if t1:
             t0 = self.get_mins(t0)
@@ -172,7 +218,9 @@ class EventData:
             if not isinstance(self.events.loc[i, "Subtype"], str):
                 continue
             # if self.events["Type"].iloc[i] == "SHOT":
-            if self.events["Subtype"].iloc[i].endswith("SAVED") or self.events["Subtype"].iloc[i].endswith("BLOCKED"):
+            if self.events["Subtype"].iloc[i].endswith("SAVED") or self.events[
+                "Subtype"
+            ].iloc[i].endswith("BLOCKED"):
                 self.events.loc[i, "marker_color"] = "white"
                 self.events.loc[i, "marker_line_color"] = "white"
                 self.events.loc[i, "marker_line_width"] = 2
@@ -260,20 +308,20 @@ class EventData:
             if row["Type"] != "PASS":
                 break
         buildup = self.events.iloc[i + 1 : index + 1, :]
-        buildup["From_num"] = buildup.From.apply(lambda x: re.findall("\d+", str(x))).apply(
-            lambda x: x[0] if len(x) > 0 else None
-        )
-        buildup["To_num"] = buildup.To.apply(lambda x: re.findall(r"\d+", str(x))).apply(
-            lambda x: x[0] if len(x) > 0 else None
-        )
+        buildup["From_num"] = buildup.From.apply(
+            lambda x: re.findall("\d+", str(x))
+        ).apply(lambda x: x[0] if len(x) > 0 else None)
+        buildup["To_num"] = buildup.To.apply(
+            lambda x: re.findall(r"\d+", str(x))
+        ).apply(lambda x: x[0] if len(x) > 0 else None)
         buildup["To_prev"] = buildup.To_num.shift(1)
         buildup["Start X Carry"] = buildup["End X"]
         buildup["Start Y Carry"] = buildup["End Y"]
         buildup["End X Carry"] = buildup["Start X"].shift(-1)
         buildup["End Y Carry"] = buildup["Start Y"].shift(-1)
-        buildup["carry"] = (buildup["Start X Carry"] != buildup["End X Carry"]) | (
-            buildup["Start Y Carry"] != buildup["End Y Carry"]
-        )
+        buildup["carry"] = (
+            buildup["Start X Carry"] != buildup["End X Carry"]
+        ) | (buildup["Start Y Carry"] != buildup["End Y Carry"])
         buildup.loc[buildup["carry"] == False, "Start X Carry"] = np.nan
         buildup.loc[buildup["carry"] == False, "Start Y Carry"] = np.nan
         buildup.loc[buildup["carry"] == False, "End X Carry"] = np.nan
@@ -292,7 +340,15 @@ class EventData:
         side = row["Team"]
         player_nums.extend([row["From_num"], row["To_num"]])
 
-        event_traces.append(go.Scatter(x=x, y=y, text=player_nums, name=row["Type"], **event_player_marker_args[side]))
+        event_traces.append(
+            go.Scatter(
+                x=x,
+                y=y,
+                text=player_nums,
+                name=row["Type"],
+                **event_player_marker_args[side],
+            )
+        )
 
         if (row["Type"] == "PASS") & (row["carry"] == True):
             event_traces.append(
@@ -320,7 +376,9 @@ class EventData:
 
         if index:
             pitch = Pitch()
-            return pitch.plot_event(data=self.get_traces(index), title=self.title(index))
+            return pitch.plot_event(
+                data=self.get_traces(index), title=self.title(index)
+            )
 
         if type == "shots":
             data = self.get_shots()
@@ -381,10 +439,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[15, 0],
                         marker_symbol="circle-x",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -404,10 +466,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[18, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -427,10 +493,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[18, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -450,10 +520,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[0, 10],
                         marker_symbol="square",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[0, 2],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -473,10 +547,14 @@ class EventData:
                         mode="markers+text",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -496,10 +574,14 @@ class EventData:
                         mode="markers+text",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -522,7 +604,9 @@ class EventData:
                         # marker_color=row["marker_color"],
                         # marker_line_color=row["marker_line_color"],
                         # marker_line_width=[row["marker_line_width"], 0],
-                        line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         line_width=1,
                         # textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -542,7 +626,9 @@ class EventData:
                         mode="markers+text",
                         marker_size=[12, 0],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
                         # line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
@@ -565,7 +651,9 @@ class EventData:
                         mode="markers+text",
                         marker_size=[0, 12],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row["Team"] == "Home"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[0, 1],
                         # line_color="#AD0B05" if row["Team"] == "Home" else "#0570B0",

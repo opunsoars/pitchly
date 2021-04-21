@@ -18,10 +18,18 @@ from src.pitchly.pitch_control import generate_pitch_control_for_frame
 class TrackingData:
     def __init__(self, data, metadata):
         self.metadata = metadata
-        self.home_players = [x.player_id for x in self.metadata.teams[0].players]
-        self.away_players = [x.player_id for x in self.metadata.teams[1].players]
-        self.home_jerseys = [x.jersey_no for x in self.metadata.teams[0].players]
-        self.away_jerseys = [x.jersey_no for x in self.metadata.teams[1].players]
+        self.home_players = [
+            x.player_id for x in self.metadata.teams[0].players
+        ]
+        self.away_players = [
+            x.player_id for x in self.metadata.teams[1].players
+        ]
+        self.home_jerseys = [
+            x.jersey_no for x in self.metadata.teams[0].players
+        ]
+        self.away_jerseys = [
+            x.jersey_no for x in self.metadata.teams[1].players
+        ]
 
         data = self.metric_coords(data)
         data = self.calc_player_velocities(data, filter_="moving average")
@@ -37,7 +45,13 @@ class TrackingData:
         return data
 
     def calc_player_velocities(
-        self, data, smoothing=True, filter_="moving average", window=7, polyorder=1, maxspeed=12
+        self,
+        data,
+        smoothing=True,
+        filter_="moving average",
+        window=7,
+        polyorder=1,
+        maxspeed=12,
     ):
         # Get the player ids
         player_ids = self.home_players + self.away_players
@@ -62,26 +76,42 @@ class TrackingData:
                 if filter_ == "Savitzky-Golay":
                     # calculate first half velocity
                     vx.iloc[:second_half_idx] = signal.savgol_filter(
-                        vx.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                        vx.iloc[:second_half_idx],
+                        window_length=window,
+                        polyorder=polyorder,
                     )
                     vy.iloc[:second_half_idx] = signal.savgol_filter(
-                        vy.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                        vy.iloc[:second_half_idx],
+                        window_length=window,
+                        polyorder=polyorder,
                     )
                     # calculate second half velocity
                     vx.iloc[second_half_idx:] = signal.savgol_filter(
-                        vx.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                        vx.iloc[second_half_idx:],
+                        window_length=window,
+                        polyorder=polyorder,
                     )
                     vy.iloc[second_half_idx:] = signal.savgol_filter(
-                        vy.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                        vy.iloc[second_half_idx:],
+                        window_length=window,
+                        polyorder=polyorder,
                     )
                 elif filter_ == "moving average":
                     ma_window = np.ones(window) / window
                     # calculate first half velocity
-                    vx.iloc[:second_half_idx] = np.convolve(vx.iloc[:second_half_idx], ma_window, mode="same")
-                    vy.iloc[:second_half_idx] = np.convolve(vy.iloc[:second_half_idx], ma_window, mode="same")
+                    vx.iloc[:second_half_idx] = np.convolve(
+                        vx.iloc[:second_half_idx], ma_window, mode="same"
+                    )
+                    vy.iloc[:second_half_idx] = np.convolve(
+                        vy.iloc[:second_half_idx], ma_window, mode="same"
+                    )
                     # calculate second half velocity
-                    vx.iloc[second_half_idx:] = np.convolve(vx.iloc[second_half_idx:], ma_window, mode="same")
-                    vy.iloc[second_half_idx:] = np.convolve(vy.iloc[second_half_idx:], ma_window, mode="same")
+                    vx.iloc[second_half_idx:] = np.convolve(
+                        vx.iloc[second_half_idx:], ma_window, mode="same"
+                    )
+                    vy.iloc[second_half_idx:] = np.convolve(
+                        vy.iloc[second_half_idx:], ma_window, mode="same"
+                    )
 
             # put player speed in x,y direction, and total speed back in the data frame
             data[player + "_vx"] = vx
@@ -104,7 +134,9 @@ class TrackingData:
 
     def get_timestamp(self, mins):
         if ":" in mins:
-            seconds = int(mins.split(":")[0]) * 60 + int(mins.split(":")[1]) + 0.04
+            seconds = (
+                int(mins.split(":")[0]) * 60 + int(mins.split(":")[1]) + 0.04
+            )
         else:
             seconds = int(mins) * 60
         return seconds
@@ -133,7 +165,9 @@ class TrackingData:
 
     def get_team_pitch_control_traces(self, frame_data, player_num=None):
         pitch_control_dict = generate_pitch_control_for_frame(
-            frame_data, self.get_home_cols(frame_data), self.get_away_cols(frame_data)
+            frame_data,
+            self.get_home_cols(frame_data),
+            self.get_away_cols(frame_data),
         )
         if player_num:
             surface = pitch_control_dict["PPCFa_pax"][str(player_num)]
@@ -170,7 +204,13 @@ class TrackingData:
             xlocs = [frame_data[f"{player_id}_x"] for player_id in players]
             ylocs = [frame_data[f"{player_id}_y"] for player_id in players]
 
-            traces = go.Scatter(x=xlocs, y=ylocs, text=jerseys[i], **player_marker_args[side], name=side)
+            traces = go.Scatter(
+                x=xlocs,
+                y=ylocs,
+                text=jerseys[i],
+                **player_marker_args[side],
+                name=side,
+            )
             position_traces.append(traces)
 
         return position_traces
@@ -212,7 +252,14 @@ class TrackingData:
 
         return ball_trace
 
-    def get_traces(self, frameID=None, pitch_control=False, velocities=True, ball=True, player_num=None):
+    def get_traces(
+        self,
+        frameID=None,
+        pitch_control=False,
+        velocities=True,
+        ball=True,
+        player_num=None,
+    ):
         """Combines various traces for required plot and returns it
 
         Args:
@@ -223,7 +270,11 @@ class TrackingData:
 
         traces = []
         if pitch_control:
-            traces.extend(self.get_team_pitch_control_traces(frame_data, player_num=player_num))
+            traces.extend(
+                self.get_team_pitch_control_traces(
+                    frame_data, player_num=player_num
+                )
+            )
 
         if velocities:
             traces.extend(self.velocity_traces(frame_data))
@@ -235,15 +286,16 @@ class TrackingData:
 
         return traces
 
-    def get_frames(self, frame_range, pitch_control=False, velocities=True, ball=True):
+    def get_frames(
+        self, frame_range, pitch_control=False, velocities=True, ball=True
+    ):
 
         frames = []
         for frameID in tqdm(frame_range):
             data_ = self.get_traces(frameID, pitch_control, velocities, ball)
             name_ = f"f{frameID}"
-            frames.append(go.Frame(data= data_,name= name_))
+            frames.append(go.Frame(data=data_, name=name_))
 
-            
             # frame = {"data": [], "name": str(frameID)}
             # frame["data"].extend(self.get_traces(frameID, pitch_control, velocities, ball))
             # frames.append(frame)
@@ -251,7 +303,13 @@ class TrackingData:
         return frames
 
     def plot_frame(
-        self, frameID=None, time=None, pitch_control=False, plot_ball=True, show_velocities=False, player_num=None
+        self,
+        frameID=None,
+        time=None,
+        pitch_control=False,
+        plot_ball=True,
+        show_velocities=False,
+        player_num=None,
     ):
 
         if time:
@@ -262,12 +320,24 @@ class TrackingData:
             time = f"{seconds//60:0.0f}'{seconds%60:0.0f}\""
 
         title = f"Time: [{time}] | FrameID: {frameID}"
-        data = self.get_traces(frameID=frameID, pitch_control=pitch_control, velocities=show_velocities, ball=plot_ball)
+        data = self.get_traces(
+            frameID=frameID,
+            pitch_control=pitch_control,
+            velocities=show_velocities,
+            ball=plot_ball,
+        )
         pitch = Pitch()
         return pitch.plot_freeze_frame(data, title)
 
     def plot_sequence(
-        self, f0=None, f1=None, t0=None, t1=None, pitch_control=False, show_velocities=True, player_num=None
+        self,
+        f0=None,
+        f1=None,
+        t0=None,
+        t1=None,
+        pitch_control=False,
+        show_velocities=True,
+        player_num=None,
     ):
 
         if t1:
@@ -283,10 +353,16 @@ class TrackingData:
         frame_range = range(f0, f1)
 
         title = f"Time: [{t0}] | FrameID: {f0} to {f1}"
-        data = self.get_traces(frameID=f0, pitch_control=pitch_control, velocities=show_velocities)
-        frames = self.get_frames(frame_range, pitch_control=pitch_control, velocities=show_velocities)
+        data = self.get_traces(
+            frameID=f0, pitch_control=pitch_control, velocities=show_velocities
+        )
+        frames = self.get_frames(
+            frame_range, pitch_control=pitch_control, velocities=show_velocities
+        )
         pitch = Pitch()
-        return pitch.plot_frames_sequence(data, frames, frame_range, title, pitch_control)
+        return pitch.plot_frames_sequence(
+            data, frames, frame_range, title, pitch_control
+        )
 
 
 class EventData:
@@ -332,11 +408,19 @@ class EventData:
             sign = 1 if event.period.id == 1 else -1
             # print(event.raw_event)
             # transform to metric dim (106,68)
-            event.raw_event["start"]["X"] = sign * ((event.raw_event["start"]["x"] - 0.5) * 106.0)
-            event.raw_event["start"]["Y"] = sign * (-1 * (event.raw_event["start"]["y"] - 0.5) * 68.0)
+            event.raw_event["start"]["X"] = sign * (
+                (event.raw_event["start"]["x"] - 0.5) * 106.0
+            )
+            event.raw_event["start"]["Y"] = sign * (
+                -1 * (event.raw_event["start"]["y"] - 0.5) * 68.0
+            )
             if event.raw_event["end"]["x"] is not None:
-                event.raw_event["end"]["X"] = sign * ((event.raw_event["end"]["x"] - 0.5) * 106.0)
-                event.raw_event["end"]["Y"] = sign * (-1 * (event.raw_event["end"]["y"] - 0.5) * 68.0)
+                event.raw_event["end"]["X"] = sign * (
+                    (event.raw_event["end"]["x"] - 0.5) * 106.0
+                )
+                event.raw_event["end"]["Y"] = sign * (
+                    -1 * (event.raw_event["end"]["y"] - 0.5) * 68.0
+                )
         return event_list
 
     def add_tags(self, event_list):
@@ -357,7 +441,11 @@ class EventData:
         return shots
 
     def get_goals(self):
-        goals = [event for event in self.events if getattr(event.result, "value", "") == "GOAL"]
+        goals = [
+            event
+            for event in self.events
+            if getattr(event.result, "value", "") == "GOAL"
+        ]
         goals = self.metric_coords(goals)
         return goals
 
@@ -378,7 +466,9 @@ class EventData:
         return freekicks
 
     def get_challenges(self):
-        challenges = [event for event in self.events if event.event_name == "CHALLENGE"]
+        challenges = [
+            event for event in self.events if event.event_name == "CHALLENGE"
+        ]
         challenges = self.metric_coords(challenges)
         return challenges
 
@@ -387,7 +477,10 @@ class EventData:
             event
             for event in self.events
             if event.event_name == "recovery"
-            and ("INTERCEPTION" in event.raw_event["tags"] or "THEFT" in event.raw_event["tags"])
+            and (
+                "INTERCEPTION" in event.raw_event["tags"]
+                or "THEFT" in event.raw_event["tags"]
+            )
         ]
         recoveries = self.metric_coords(recoveries)
         return recoveries
@@ -397,7 +490,10 @@ class EventData:
             event
             for event in self.events
             if event.event_name == "pass"
-            and ("INTERCEPTION" in event.raw_event["tags"] or "THEFT" in event.raw_event["tags"])
+            and (
+                "INTERCEPTION" in event.raw_event["tags"]
+                or "THEFT" in event.raw_event["tags"]
+            )
         ]
         turnovers = self.metric_coords(turnovers)
         return turnovers
@@ -409,7 +505,10 @@ class EventData:
                 if self.events[i - 1].event_name == "pass":
                     # passes that led to shots
                     shot_assists.append(self.events[i - 1])
-                elif self.events[i - 1].event_name == "carry" and self.events[i - 2].event_name == "pass":
+                elif (
+                    self.events[i - 1].event_name == "carry"
+                    and self.events[i - 2].event_name == "pass"
+                ):
                     # passes that led to carry+shot
                     shot_assists.append(self.events[i - 2])
 
@@ -423,7 +522,10 @@ class EventData:
                 if self.events[i - 1].event_name == "pass":
                     # passes that led to goals
                     assists.append(self.events[i - 1])
-                elif self.events[i - 1].event_name == "carry" and self.events[i - 2].event_name == "pass":
+                elif (
+                    self.events[i - 1].event_name == "carry"
+                    and self.events[i - 2].event_name == "pass"
+                ):
                     # passes that led to carry+goal
                     assists.append(self.events[i - 2])
 
@@ -432,7 +534,11 @@ class EventData:
 
     def get_passes(self):
         # only complete passes for now
-        passes = [event for event in self.events if event.event_name == "pass" and event.result.value == "COMPLETE"]
+        passes = [
+            event
+            for event in self.events
+            if event.event_name == "pass" and event.result.value == "COMPLETE"
+        ]
         passes = self.metric_coords(passes)
         return passes
 
@@ -447,7 +553,10 @@ class EventData:
                     if self.events[i].result:
                         buildup.append(self.events[i])
                     i -= 1
-                    if self.events[i].ball_owning_team and self.events[i].ball_owning_team != team:
+                    if (
+                        self.events[i].ball_owning_team
+                        and self.events[i].ball_owning_team != team
+                    ):
                         break
 
         return buildup
@@ -458,7 +567,9 @@ class EventData:
         x.extend([row.raw_event["start"]["X"], row.raw_event["end"]["X"]])
         y.extend([row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]])
         if row.event_name == "pass":
-            player_nums.extend([row.player.jersey_no, row.receiver_player.jersey_no])
+            player_nums.extend(
+                [row.player.jersey_no, row.receiver_player.jersey_no]
+            )
         else:
             player_nums.extend([row.player.jersey_no, None])
 
@@ -471,10 +582,14 @@ class EventData:
                 mode="lines+markers+text",
                 marker_size=[20, 0],
                 # marker_symbol="circle-x",
-                marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                marker_color="#AD0B05"
+                if row.team.ground.name == "HOME"
+                else "#0570B0",
                 marker_line_color="white",
                 marker_line_width=[2, 0],
-                line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                line_color="#AD0B05"
+                if row.team.ground.name == "HOME"
+                else "#0570B0",
                 line_width=1,
                 line_dash="dash" if row.event_name == "carry" else None,
                 textfont=dict(size=11, color="white"),
@@ -508,7 +623,9 @@ class EventData:
 
         if index:
             pitch = Pitch()
-            return pitch.plot_event(data=self.get_traces(index), title=self.title(index))
+            return pitch.plot_event(
+                data=self.get_traces(index), title=self.title(index)
+            )
 
         if type == "shots":
             data = self.get_shots()
@@ -516,8 +633,14 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -525,7 +648,10 @@ class EventData:
                         marker_symbol=row.raw_event["marker_symbol"],
                         marker_color=row.raw_event["marker_color"],
                         marker_line_color=row.raw_event["marker_line_color"],
-                        marker_line_width=[row.raw_event["marker_line_width"], 0],
+                        marker_line_width=[
+                            row.raw_event["marker_line_width"],
+                            0,
+                        ],
                         line_color=row.raw_event["marker_line_color"],
                         line_width=1,
                         textfont=dict(size=11, color="white"),
@@ -539,8 +665,14 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
@@ -548,7 +680,10 @@ class EventData:
                         marker_symbol=row.raw_event["marker_symbol"],
                         marker_color=row.raw_event["marker_color"],
                         marker_line_color=row.raw_event["marker_line_color"],
-                        marker_line_width=[row.raw_event["marker_line_width"], 0],
+                        marker_line_width=[
+                            row.raw_event["marker_line_width"],
+                            0,
+                        ],
                         line_color=row.raw_event["marker_line_color"],
                         line_width=1,
                         textfont=dict(size=11, color="white"),
@@ -562,17 +697,27 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[0, 10],
                         marker_symbol="square",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[0, 2],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -585,17 +730,27 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
                         marker_symbol="circle-x",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -615,10 +770,14 @@ class EventData:
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -638,10 +797,14 @@ class EventData:
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -661,10 +824,14 @@ class EventData:
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -677,17 +844,27 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=[row.player.jersey_no, None],
                         name=row.result.value,
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[20, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -700,17 +877,27 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=[row.player.jersey_no, None],
                         name=row.result.value,
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[20, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -723,9 +910,18 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
-                        text=[row.player.jersey_no, row.receiver_player.jersey_no],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
+                        text=[
+                            row.player.jersey_no,
+                            row.receiver_player.jersey_no,
+                        ],
                         name=row.result.value,
                         mode="lines",
                         # marker_size=[0, 0],
@@ -733,7 +929,9 @@ class EventData:
                         # marker_color=row["marker_color"],
                         # marker_line_color=row["marker_line_color"],
                         # marker_line_width=[row["marker_line_width"], 0],
-                        line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        line_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         line_width=1,
                         # textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -746,14 +944,22 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=[None, None],
                         name=row.result.value,
                         mode="markers+text",
                         marker_size=[10, 0],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[1, 0],
                         # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
@@ -769,14 +975,22 @@ class EventData:
             for row in data:
                 traces.append(
                     go.Scatter(
-                        x=[row.raw_event["start"]["X"], row.raw_event["end"]["X"]],
-                        y=[row.raw_event["start"]["Y"], row.raw_event["end"]["Y"]],
+                        x=[
+                            row.raw_event["start"]["X"],
+                            row.raw_event["end"]["X"],
+                        ],
+                        y=[
+                            row.raw_event["start"]["Y"],
+                            row.raw_event["end"]["Y"],
+                        ],
                         text=[None, None],
                         name=row.result.value,
                         mode="markers+text",
                         marker_size=[0, 10],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        marker_color="#AD0B05"
+                        if row.team.ground.name == "HOME"
+                        else "#0570B0",
                         marker_line_color="white",
                         marker_line_width=[0, 1],
                         # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",

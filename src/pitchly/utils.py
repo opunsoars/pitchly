@@ -2,6 +2,7 @@ import glob
 
 import numpy as np
 import pandas as pd
+
 # import plotly.graph_objects as go
 import scipy.signal as signal
 
@@ -33,7 +34,9 @@ def modify_cols(tracking_df):
         tracking_df[col] = tracking_df[col].astype(float)
     tracking_df["Frame"] = tracking_df.Frame.astype(int)
     tracking_df["Period"] = tracking_df.Period.astype(int)
-    tracking_df["mins"] = tracking_df["Time [s]"].apply(lambda x: f"{x//60:0.0f}:{x%60:0.2f}")
+    tracking_df["mins"] = tracking_df["Time [s]"].apply(
+        lambda x: f"{x//60:0.0f}:{x%60:0.2f}"
+    )
     tracking_df.set_index("Frame", inplace=True)
     return tracking_df
 
@@ -56,7 +59,14 @@ def convert_to_metric_coords(data, field_dimen=FIELD_DIM):
     return data
 
 
-def calc_player_velocities(team, smoothing=True, filter_="moving average", window=7, polyorder=1, maxspeed=12):
+def calc_player_velocities(
+    team,
+    smoothing=True,
+    filter_="moving average",
+    window=7,
+    polyorder=1,
+    maxspeed=12,
+):
     """calc_player_velocities( tracking_data )
 
     Calculate player velocities in x & y direciton, and total player speed at each timestamp of the tracking data
@@ -83,7 +93,9 @@ def calc_player_velocities(team, smoothing=True, filter_="moving average", windo
     # print (team.isna().sum())
 
     # Get the player ids
-    player_ids = np.unique([c[:-2] for c in team.columns if c[:4] in ["Home", "Away"]])
+    player_ids = np.unique(
+        [c[:-2] for c in team.columns if c[:4] in ["Home", "Away"]]
+    )
 
     # Calculate the timestep from one frame to the next. Should always be 0.04 within the same half
     dt = team["Time [s]"].diff()
@@ -107,26 +119,42 @@ def calc_player_velocities(team, smoothing=True, filter_="moving average", windo
             if filter_ == "Savitzky-Golay":
                 # calculate first half velocity
                 vx.iloc[:second_half_idx] = signal.savgol_filter(
-                    vx.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                    vx.iloc[:second_half_idx],
+                    window_length=window,
+                    polyorder=polyorder,
                 )
                 vy.iloc[:second_half_idx] = signal.savgol_filter(
-                    vy.iloc[:second_half_idx], window_length=window, polyorder=polyorder
+                    vy.iloc[:second_half_idx],
+                    window_length=window,
+                    polyorder=polyorder,
                 )
                 # calculate second half velocity
                 vx.iloc[second_half_idx:] = signal.savgol_filter(
-                    vx.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                    vx.iloc[second_half_idx:],
+                    window_length=window,
+                    polyorder=polyorder,
                 )
                 vy.iloc[second_half_idx:] = signal.savgol_filter(
-                    vy.iloc[second_half_idx:], window_length=window, polyorder=polyorder
+                    vy.iloc[second_half_idx:],
+                    window_length=window,
+                    polyorder=polyorder,
                 )
             elif filter_ == "moving average":
                 ma_window = np.ones(window) / window
                 # calculate first half velocity
-                vx.iloc[:second_half_idx] = np.convolve(vx.iloc[:second_half_idx], ma_window, mode="same")
-                vy.iloc[:second_half_idx] = np.convolve(vy.iloc[:second_half_idx], ma_window, mode="same")
+                vx.iloc[:second_half_idx] = np.convolve(
+                    vx.iloc[:second_half_idx], ma_window, mode="same"
+                )
+                vy.iloc[:second_half_idx] = np.convolve(
+                    vy.iloc[:second_half_idx], ma_window, mode="same"
+                )
                 # calculate second half velocity
-                vx.iloc[second_half_idx:] = np.convolve(vx.iloc[second_half_idx:], ma_window, mode="same")
-                vy.iloc[second_half_idx:] = np.convolve(vy.iloc[second_half_idx:], ma_window, mode="same")
+                vx.iloc[second_half_idx:] = np.convolve(
+                    vx.iloc[second_half_idx:], ma_window, mode="same"
+                )
+                vy.iloc[second_half_idx:] = np.convolve(
+                    vy.iloc[second_half_idx:], ma_window, mode="same"
+                )
 
         # put player speed in x,y direction, and total speed back in the data frame
         team[player + "_vx"] = vx
@@ -139,7 +167,9 @@ def calc_player_velocities(team, smoothing=True, filter_="moving average", windo
 def remove_player_velocities(team):
     # remove player velocoties and acceleeration measures that are already in the 'team' dataframe
     columns = [
-        c for c in team.columns if c.split("_")[-1] in ["vx", "vy", "ax", "ay", "speed", "acceleration"]
+        c
+        for c in team.columns
+        if c.split("_")[-1] in ["vx", "vy", "ax", "ay", "speed", "acceleration"]
     ]  # Get the player ids
     team = team.drop(columns=columns)
     return team
