@@ -3,6 +3,8 @@
 # this file is modified from https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking/blob/master/Metrica_PitchControl.py
 # original author: Laurie Shaw (research work developed by William Spearman)
 
+import numpy as np
+
 """
 Created on Mon Apr 19 14:52:19 2020
 
@@ -40,8 +42,6 @@ pitch control calculations.
 Modified for pitchly by @author: Vinay Warrier (@opunsoars)
 
 """
-
-import numpy as np
 
 
 def initialise_players(frame_data, params):
@@ -156,11 +156,14 @@ def default_model_params(time_to_control_veto=3):
     """
     default_model_params()
 
-    Returns the default parameters that define and evaluate the model. See Spearman 2018 for more details.
+    Returns the default parameters that define and evaluate the model.
+    See Spearman 2018 for more details.
 
     Parameters
     -----------
-    time_to_control_veto: If the probability that another team or player can get to the ball and control it is less than 10^-time_to_control_veto, ignore that player.
+    time_to_control_veto: If the probability that another team or player can get
+    to the ball and control it is less than 10^-time_to_control_veto,
+    ignore that player.
 
 
     Returns
@@ -176,11 +179,15 @@ def default_model_params(time_to_control_veto=3):
         "max_player_accel"
     ] = 7.0  # maximum player acceleration m/s/s, not used in this implementation
     params["max_player_speed"] = 5.0  # maximum player speed m/s
-    # seconds, time taken for player to react and change trajectory. Roughly determined as vmax/amax
+    # seconds, time taken for player to react and change trajectory. Roughly
+    # determined as vmax/amax
     params["reaction_time"] = 0.7
-    # Standard deviation of sigmoid function in Spearman 2018 ('s') that determines uncertainty in player arrival time
+    # Standard deviation of sigmoid function in Spearman 2018 ('s') that
+    # determines uncertainty in player arrival time
     params["tti_sigma"] = 0.45
-    # kappa parameter in Spearman 2018 (=1.72 in the paper) that gives the advantage defending players to control ball, I have set to 1 so that home & away players have same ball control probability
+    # kappa parameter in Spearman 2018 (=1.72 in the paper) that gives the
+    # advantage defending players to control ball, I have set to 1 so that
+    # home & away players have same ball control probability
     params["kappa_def"] = 1.0
     params["lambda_att"] = 4.3  # ball control parameter for attacking team
     # ball control parameter for defending team
@@ -191,8 +198,10 @@ def default_model_params(time_to_control_veto=3):
     params["max_int_time"] = 10  # upper limit on integral time
     # assume convergence when PPCF>0.99 at a given location.
     params["model_converge_tol"] = 0.01
-    # The following are 'short-cut' parameters. We do not need to calculated PPCF explicitly when a player has a sufficient head start.
-    # A sufficient head start is when the a player arrives at the target location at least 'time_to_control' seconds before the next player
+    # The following are 'short-cut' parameters. We do not need to calculated
+    # PPCF explicitly when a player has a sufficient head start.
+    # A sufficient head start is when the a player arrives at the target
+    # location at least 'time_to_control' seconds before the next player
     params["time_to_control_att"] = (
         time_to_control_veto
         * np.log(10)
@@ -217,22 +226,29 @@ def generate_pitch_control_for_event(
 ):
     """generate_pitch_control_for_event
 
-    Evaluates pitch control surface over the entire field at the moment of the given event (determined by the index of the event passed as an input)
+    Evaluates pitch control surface over the entire field at the moment of the
+     given event (determined by the index of the event passed as an input)
 
     Parameters
     -----------
-        event_id: Index (not row) of the event that describes the instant at which the pitch control surface should be calculated
+        event_id: Index (not row) of the event that describes the instant at
+                  which the pitch control surface should be calculated
         events: Dataframe containing the event data
         tracking_home: tracking DataFrame for the Home team
         tracking_away: tracking DataFrame for the Away team
-        params: Dictionary of model parameters (default model parameters can be generated using default_model_params() )
-        field_dimen: tuple containing the length and width of the pitch in meters. Default is (106,68)
-        n_grid_cells_x: Number of pixels in the grid (in the x-direction) that covers the surface. Default is 50.
-                        n_grid_cells_y will be calculated based on n_grid_cells_x and the field dimensions
+        params: Dictionary of model parameters (default model parameters can be
+                generated using default_model_params() )
+        field_dimen: tuple containing the length and width of the pitch in
+                     meters. Default is (106,68)
+        n_grid_cells_x: Number of pixels in the grid (in the x-direction) that
+                        covers the surface. Default is 50.
+                        n_grid_cells_y will be calculated based on n_grid_cells_x
+                        and the field dimensions
 
     Returrns
     -----------
-        PPCFa: Pitch control surface (dimen (n_grid_cells_x,n_grid_cells_y) ) containing pitch control probability for the attcking team.
+        PPCFa: Pitch control surface (dimen (n_grid_cells_x,n_grid_cells_y) )
+               containing pitch control probability for the attcking team.
                Surface for the defending team is just 1-PPCFa.
         xgrid: Positions of the pixels in the x-direction (field length)
         ygrid: Positions of the pixels in the y-direction (field width)
@@ -256,7 +272,8 @@ def generate_pitch_control_for_event(
     # initialise pitch control grids for attacking and defending teams
     PPCFa = np.zeros(shape=(len(ygrid), len(xgrid)))
     PPCFd = np.zeros(shape=(len(ygrid), len(xgrid)))
-    # initialise player positions and velocities for pitch control calc (so that we're not repeating this at each grid cell position)
+    # initialise player positions and velocities for pitch control calc (so that
+    # we're not repeating this at each grid cell position)
     if pass_team == "Home":
         attacking_players = initialise_players(
             tracking_home.loc[pass_frame], "Home", params
@@ -302,20 +319,28 @@ def calculate_pitch_control_at_target(
 ):
     """calculate_pitch_control_at_target
 
-    Calculates the pitch control probability for the attacking and defending teams at a specified target position on the ball.
+    Calculates the pitch control probability for the attacking and defending
+    teams at a specified target position on the ball.
 
     Parameters
     -----------
-        target_position: size 2 numpy array containing the (x,y) position of the position on the field to evaluate pitch control
-        attacking_players: list of 'player' objects (see player class above) for the players on the attacking team (team in possession)
-        defending_players: list of 'player' objects (see player class above) for the players on the defending team
-        ball_start_pos: Current position of the ball (start position for a pass). If set to NaN, function will assume that the ball is already at the target position.
-        params: Dictionary of model parameters (default model parameters can be generated using default_model_params() )
+        target_position: size 2 numpy array containing the (x,y) position of the
+                         position on the field to evaluate pitch control
+        attacking_players: list of 'player' objects (see player class above) for
+                           the players on the attacking team (team in possession)
+        defending_players: list of 'player' objects (see player class above) for
+                           the players on the defending team
+        ball_start_pos: Current position of the ball (start position for a pass).
+                        If set to NaN, function will assume that the ball is
+                        already at the target position.
+        params: Dictionary of model parameters (default model parameters can be
+                generated using default_model_params() )
 
     Returrns
     -----------
         PPCFatt: Pitch control probability for the attacking team
-        PPCFdef: Pitch control probability for the defending team ( 1-PPCFatt-PPCFdef <  params['model_converge_tol'] )
+        PPCFdef: Pitch control probability for the defending team
+                 ( 1-PPCFatt-PPCFdef <  params['model_converge_tol'] )
 
     """
     # calculate ball travel time from start position to end position.
@@ -323,13 +348,15 @@ def calculate_pitch_control_at_target(
     if ball_start_pos is None or any(np.isnan(ball_start_pos)):
         ball_travel_time = 0.0
     else:
-        # ball travel time is distance to target position from current ball position divided assumed average ball speed
+        # ball travel time is distance to target position from current ball
+        # position divided assumed average ball speed
         ball_travel_time = (
             np.linalg.norm(target_position - ball_start_pos)
             / params["average_ball_speed"]
         )
 
-    # first get arrival time of 'nearest' attacking player (nearest also dependent on current velocity)
+    # first get arrival time of 'nearest' attacking player (nearest also
+    # dependent on current velocity)
     tau_min_att = np.nanmin(
         [p.simple_time_to_intercept(target_position) for p in attacking_players]
     )
@@ -342,13 +369,15 @@ def calculate_pitch_control_at_target(
         tau_min_att - max(ball_travel_time, tau_min_def)
         >= params["time_to_control_def"]
     ):
-        # if defending team can arrive significantly before attacking team, no need to solve pitch control model
+        # if defending team can arrive significantly before attacking team,
+        # no need to solve pitch control model
         return 0.0, 1.0
     elif (
         tau_min_def - max(ball_travel_time, tau_min_att)
         >= params["time_to_control_att"]
     ):
-        # if attacking team can arrive significantly before defending team, no need to solve pitch control model
+        # if attacking team can arrive significantly before defending team,
+        # no need to solve pitch control model
         return 1.0, 0.0
     else:
         # solve pitch control model by integrating equation 3 in Spearman et al.
@@ -371,7 +400,8 @@ def calculate_pitch_control_at_target(
         )
         PPCFatt = np.zeros_like(dT_array)
         PPCFdef = np.zeros_like(dT_array)
-        # integration equation 3 of Spearman 2018 until convergence or tolerance limit hit (see 'params')
+        # integration equation 3 of Spearman 2018 until convergence or tolerance
+        # limit hit (see 'params')
         ptot = 0.0
         i = 1
         Patt = {}
@@ -379,7 +409,8 @@ def calculate_pitch_control_at_target(
         while 1 - ptot > params["model_converge_tol"] and i < dT_array.size:
             T = dT_array[i]
             for player in attacking_players:
-                # calculate ball control probablity for 'player' in time interval T+dt
+                # calculate ball control probablity for 'player' in time interval
+                # T+dt
                 dPPCFdT = (
                     (1 - PPCFatt[i - 1] - PPCFdef[i - 1])
                     * player.probability_intercept_ball(T)
@@ -388,14 +419,17 @@ def calculate_pitch_control_at_target(
                 # make sure it's greater than zero
                 assert (
                     dPPCFdT >= 0
-                ), "Invalid attacking player probability (calculate_pitch_control_at_target)"
+                ), "Invalid attacking player probability \
+                    (calculate_pitch_control_at_target)"
                 # total contribution from individual player
                 player.PPCF += dPPCFdT * params["int_dt"]
-                # add to sum over players in the attacking team (remembering array element is zero at the start of each integration iteration)
+                # add to sum over players in the attacking team (remembering
+                # array element is zero at the start of each integration iteration)
                 PPCFatt[i] += player.PPCF
                 Patt[player.id] = player.PPCF
             for player in defending_players:
-                # calculate ball control probablity for 'player' in time interval T+dt
+                # calculate ball control probablity for 'player' in time interval
+                # T+dt
                 dPPCFdT = (
                     (1 - PPCFatt[i - 1] - PPCFdef[i - 1])
                     * player.probability_intercept_ball(T)
@@ -404,7 +438,8 @@ def calculate_pitch_control_at_target(
                 # make sure it's greater than zero
                 assert (
                     dPPCFdT >= 0
-                ), "Invalid defending player probability (calculate_pitch_control_at_target)"
+                ), "Invalid defending player probability \
+                    (calculate_pitch_control_at_target)"
                 # total contribution from individual player
                 player.PPCF += dPPCFdT * params["int_dt"]
                 # add to sum over players in the defending team
@@ -437,22 +472,29 @@ def generate_pitch_control_for_frame(
 ):
     """generate_pitch_control_for_frame
 
-    Evaluates pitch control surface over the entire field at the moment of the given event (determined by the index of the event passed as an input)
+    Evaluates pitch control surface over the entire field at the moment of the
+    given event (determined by the index of the event passed as an input)
 
     Parameters
     -----------
-        event_id: Index (not row) of the event that describes the instant at which the pitch control surface should be calculated
+        event_id: Index (not row) of the event that describes the instant at
+                  which the pitch control surface should be calculated
         events: Dataframe containing the event data
         tracking_home: tracking DataFrame for the Home team
         tracking_away: tracking DataFrame for the Away team
-        params: Dictionary of model parameters (default model parameters can be generated using default_model_params() )
-        field_dimen: tuple containing the length and width of the pitch in meters. Default is (106,68)
-        n_grid_cells_x: Number of pixels in the grid (in the x-direction) that covers the surface. Default is 50.
-                        n_grid_cells_y will be calculated based on n_grid_cells_x and the field dimensions
+        params: Dictionary of model parameters (default model parameters can be
+                generated using default_model_params() )
+        field_dimen: tuple containing the length and width of the pitch in meters.
+                     Default is (106,68)
+        n_grid_cells_x: Number of pixels in the grid (in the x-direction) that
+                        covers the surface. Default is 50.
+                        n_grid_cells_y will be calculated based on n_grid_cells_x
+                        and the field dimensions
 
     Returrns
     -----------
-        PPCFa: Pitch control surface (dimen (n_grid_cells_x,n_grid_cells_y) ) containing pitch control probability for the attcking team.
+        PPCFa: Pitch control surface (dimen (n_grid_cells_x,n_grid_cells_y) )
+               containing pitch control probability for the attcking team.
                Surface for the defending team is just 1-PPCFa.
         xgrid: Positions of the pixels in the x-direction (field length)
         ygrid: Positions of the pixels in the y-direction (field width)
@@ -475,7 +517,8 @@ def generate_pitch_control_for_frame(
     PPCFa = np.zeros(shape=(len(ygrid), len(xgrid)))
     PPCFd = np.zeros(shape=(len(ygrid), len(xgrid)))
 
-    # pick only the columns representing players whose data is available for this match
+    # pick only the columns representing players whose data is available for
+    # this match
     # Basically playerIDs that have data for this row/frame
     homeplayers = [
         x.split("_")[0]
@@ -490,7 +533,8 @@ def generate_pitch_control_for_frame(
         .keys()
     ]
 
-    # initialise pitch control grids for individual players in attacking and defending teams
+    # initialise pitch control grids for individual players in attacking and
+    # defending teams
     PPCFa_pax = {
         pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in homeplayers
     }
@@ -498,15 +542,16 @@ def generate_pitch_control_for_frame(
         pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in awayplayers
     }
 
-    # initialise player positions and velocities for pitch control calc (so that we're not repeating this at each grid cell position)
+    # initialise player positions and velocities for pitch control calc
+    # (so that we're not repeating this at each grid cell position)
     if attacking == "Home":
         attacking_players = initialise_players(frame_data[home_cols], params)
         defending_players = initialise_players(frame_data[away_cols], params)
-        opp = "Away"
+        # opp = "Away"
     elif attacking == "Away":
         defending_players = initialise_players(frame_data[home_cols], params)
         attacking_players = initialise_players(frame_data[away_cols], params)
-        opp = "Home"
+        # opp = "Home"
     else:
         assert False, "Team in possession must be either home or away"
 

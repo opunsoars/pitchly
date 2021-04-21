@@ -2,9 +2,7 @@ from collections import namedtuple
 
 import plotly.graph_objects as go
 
-from src.pitchly.params import (
-    FIELD_COLOR,
-)  # event_player_marker_args,; player_marker_args,
+from src.pitchly.params import FIELD_COLOR  # event_player_marker_args,; player_marker_args,
 from src.pitchly.params import FIELD_DIM
 from src.pitchly.params import FIELD_HEIGHT
 from src.pitchly.params import FIELD_MARKINGS_COLOR
