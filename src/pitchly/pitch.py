@@ -298,8 +298,6 @@ class Pitch:
         fig = go.Figure(fig_dict)
         fig.show()
 
-        return frames
-
     def plot_pitch(self):
         """Just generates an empty pitch.
         Store it in a fig object and add data to plot over it.

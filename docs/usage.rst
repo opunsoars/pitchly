@@ -59,7 +59,7 @@ Plot Frame by FrameID
 ^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
-    data.plot_frame(frameID=264)
+    data.plot_frame(frameID=3264)
 
 .. image:: imgs/t1.png
     :width: 500
@@ -81,7 +81,7 @@ You can plot a sequence of frames with a slider to animate/track an event.
 
 .. code-block:: python
 
-    data.plot_sequence(f0=17850,f1=17950)
+    data.plot_sequence(f0=15850,f1=15950)
 
 .. image:: imgs/t1.gif
     :width: 500
@@ -98,6 +98,33 @@ Or use the start time and end time for an interval sequence.
 .. image:: imgs/t2.gif
     :width: 500
     :alt: Output of plot_sequence by time
+
+
+Pitch control
+^^^^^^^^^^^^^
+The pitch control is calculated by adapting Laurie Shaw's work on William Spearman's model.
+Since generating pitch control visualization on the fly gets sluggish, it is recommended to
+proceed with slight patience using the sliders (the pitch control overlay reloads with a tiny
+delay for every frame). The example shown here is for a very small time range (5 seconds / 125
+frames) and generating the viz takes 7 minutes.
+
+.. code-block:: python
+
+    data.plot_sequence(t0='72',t1='72:05', pitch_control = True)
+
+.. image:: imgs/p1.gif
+    :width: 500
+    :alt: Output of plot_sequence by time
+
+Generating pitch control overlay for individual frame/time inputs is fairly faster.
+
+.. code-block:: python
+
+    data.plot_frame(time='17:20', pitch_control = True)
+
+.. image:: imgs/p1.png
+    :width: 500
+    :alt: Output of plot_frame by time
 
 
 Event Data
@@ -267,7 +294,8 @@ In order to know the index, you can browse the subset of choice using a ``kloppy
 
 .. code-block:: python
 
-    kloppy.to_pandas(data.get_shots(),additional_columns={'index_to_plot':lambda row: row.raw_event['index']})
+    kloppy.to_pandas(data.get_shots(),
+                     additional_columns={'index_to_plot': lambda row: row.raw_event['index']}).set_index('index_to_plot')
 
 
 Old Metrica Format (csv)

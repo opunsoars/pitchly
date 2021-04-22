@@ -26,8 +26,8 @@ class TrackingData:
         ]
 
         data = self.metric_coords(data)
+        data = self.flip_direction(data, period=1)
         data = self.calc_player_velocities(data, filter_="moving average")
-        data = self.flip_second_half_direction(data)
         self.data = data
 
     def metric_coords(self, data, field_dimen=prm.field_dim):
@@ -118,14 +118,19 @@ class TrackingData:
 
         return data
 
-    def flip_second_half_direction(self, data):
+    def flip_direction(self, data, period=2):
         """
         Flip coordinates in second half so that each team always shoots in
         the same direction through the match.
         """
-        second_half_idx = data.period_id.idxmax(2)
-        columns = [c for c in data.columns if c[-1] in ["X", "y"]]
-        data.loc[second_half_idx:, columns] *= -1
+
+        second_half_idx = data.period_id.idxmax()
+        columns = [c for c in data.columns if c[-1] in ["x", "y"]]
+        if period == 1:
+            data.loc[:second_half_idx, columns] *= -1
+        else:
+            data.loc[second_half_idx:, columns] *= -1
+
         return data
 
     def get_frameID_from_timestamp(self, timestamp):
@@ -345,11 +350,11 @@ class TrackingData:
     ):
 
         if t1:
-            t0 = self.get_timestamp(t0)
-            t1 = self.get_timestamp(t1)
+            t0_ = self.get_timestamp(t0)
+            t1_ = self.get_timestamp(t1)
 
-            f0 = self.get_frameID_from_timestamp(t0)
-            f1 = self.get_frameID_from_timestamp(t1)
+            f0 = self.get_frameID_from_timestamp(t0_)
+            f1 = self.get_frameID_from_timestamp(t1_)
 
             if ":" in t0:
                 t0 = f"{t0.split(':')[0]}' {t0.split(':')[1]}\""
@@ -413,21 +418,21 @@ class EventData:
     def metric_coords(self, event_list):
         for event in event_list:
             # flip sign
-            sign = 1 if event.period.id == 1 else -1
+            sign = -1 if event.period.id == 1 else 1
             # print(event.raw_event)
             # transform to metric dim (106,68)
             event.raw_event["start"]["X"] = sign * (
-                (event.raw_event["start"]["x"] - 0.5) * 106.0
+                (event.raw_event["start"]["x"] - 0.5) * prm.field_dim[0]
             )
             event.raw_event["start"]["Y"] = sign * (
-                -1 * (event.raw_event["start"]["y"] - 0.5) * 68.0
+                -1 * (event.raw_event["start"]["y"] - 0.5) * prm.field_dim[1]
             )
             if event.raw_event["end"]["x"] is not None:
                 event.raw_event["end"]["X"] = sign * (
-                    (event.raw_event["end"]["x"] - 0.5) * 106.0
+                    (event.raw_event["end"]["x"] - 0.5) * prm.field_dim[0]
                 )
                 event.raw_event["end"]["Y"] = sign * (
-                    -1 * (event.raw_event["end"]["y"] - 0.5) * 68.0
+                    -1 * (event.raw_event["end"]["y"] - 0.5) * prm.field_dim[1]
                 )
         return event_list
 
