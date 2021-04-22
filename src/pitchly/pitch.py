@@ -230,7 +230,7 @@ class Pitch:
             ),
             margin=go.layout.Margin(l=0, r=0, b=0, t=0, pad=0),
             legend=dict(
-                x=0.1, y=0.995, orientation="h", bgcolor="rgba(0,0,0,0)"
+                x=0.1, y=0.993, orientation="h", bgcolor="rgba(0,0,0,0)"
             ),
         )
 
@@ -241,17 +241,30 @@ class Pitch:
                 layout["updatemenus"], layout["sliders"] = self.add_pc_controls(
                     frame_range
                 )
+                layout["legend"] = dict(
+                    x=0.5,
+                    y=0.07,
+                    # xanchor="center",
+                    orientation="h",
+                    bgcolor="rgba(233,236,239,0.8)",
+                )
+                layout["title"]["y"] = 0.13
+                layout["title"]["font_color"] = "black"
+                layout["margin"]["b"] = 100
             else:
                 layout["updatemenus"], layout["sliders"] = self.add_controls(
                     frame_range
                 )
-
-            # layout["title"] = None
-            layout["legend"]["x"] = 0.3
-            layout["legend"]["y"] = 0.03
-            layout["title"]["y"] = 0.15
-            layout["title"]["font_color"] = "black"
-            layout["margin"]["b"] = 100
+                layout["legend"] = dict(
+                    x=0.5,
+                    y=0.05,
+                    # xanchor="center",
+                    orientation="h",
+                    bgcolor="rgba(0,0,0,0)",
+                )
+                layout["title"]["y"] = 0.13
+                layout["title"]["font_color"] = "black"
+                layout["margin"]["b"] = 100
 
         # if title:
         #     layout["title_text"] = title

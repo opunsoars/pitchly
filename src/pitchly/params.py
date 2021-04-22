@@ -5,8 +5,8 @@ class prm:
         title_color="White",
     )
     pc = dict(
-        field_color="White", 
-        field_markings_color="black", 
+        field_color="White",
+        field_markings_color="black",
         title_color="black"
     )
 
