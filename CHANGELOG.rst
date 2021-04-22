@@ -2,7 +2,7 @@
 Changelog
 =========
 
-0.1.1 (2021-04-22)
+0.2.0 (2021-04-22)
 ------------------
 
 * Initial release (Metrica Tracking/Event)
