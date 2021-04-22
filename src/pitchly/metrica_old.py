@@ -5,9 +5,9 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from tqdm.auto import tqdm
 
-from src.pitchly.params import prm
-from src.pitchly.pitch import Pitch
-from src.pitchly.pitch_control_old import generate_pitch_control_for_frame
+from .params import prm
+from .pitch import Pitch
+from .pitch_control_old import generate_pitch_control_for_frame
 
 
 class TrackingData:
@@ -251,11 +251,7 @@ class TrackingData:
         )
         pitch = Pitch()
         return pitch.plot_frames_sequence(
-            data,
-            frames,
-            frame_range,
-            title,
-            pitch_control
+            data, frames, frame_range, title, pitch_control
         )
 
 

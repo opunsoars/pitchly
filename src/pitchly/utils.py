@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.signal as signal
 
-from src.pitchly.params import prm
+from .params import prm
 
 match_dir = "/media/opunsoars/My Book/playground/friends_of_tracking/friends_of_tracking/\
     datahub/metrica_sports/sample-data/data/Sample_Game_1"

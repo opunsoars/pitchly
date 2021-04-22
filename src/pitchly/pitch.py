@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import plotly.graph_objects as go
 
-from src.pitchly.params import prm
+from .params import prm
 
 
 class Pitch:

@@ -4,9 +4,9 @@ import plotly.graph_objects as go
 from scipy import signal
 from tqdm.auto import tqdm
 
-from src.pitchly.params import prm
-from src.pitchly.pitch import Pitch
-from src.pitchly.pitch_control import generate_pitch_control_for_frame
+from .params import prm
+from .pitch import Pitch
+from .pitch_control import generate_pitch_control_for_frame
 
 
 class TrackingData:
