@@ -43,8 +43,8 @@ Data Loading
     )
 
 
-Basic Football Pitch Event
-==========================
+Basic Football Pitch
+====================
 
 
 ``pitchly`` can be used to plot a basic football pitch (currently Metrica data dimensions) and building further on it as needed.
