@@ -2,10 +2,16 @@
 Changelog
 =========
 
+0.1.1 (2021-04-22)
+------------------
+
+* Initial release (Metrica Tracking/Event)
+* Pitch Control
+
 0.1.0 (2021-04-19)
 ------------------
 
-* First release (Metrica Tracking/Event)
+* Pre release (Metrica Tracking/Event)
 
 0.0.0 (2021-04-15)
 ------------------
