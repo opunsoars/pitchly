@@ -114,7 +114,7 @@ Contact
 Get in touch! For help or to contribute with ideas and to discuss football analytics.
 Mail me at vinay.warrier@gmail.com or connect on `Twitter <https://twitter.com/opunsoars>`_ | `LinkedIn <https://www.linkedin.com/in/opunsoars/>`_
 
-The story behind putting this library together came from the `short project <https://twitter.com/opunsoars/status/1259471707577827329>`_ in the Friends of Tracking initiative last year (2020).  
+The story behind putting this small package together came from the `short project <https://twitter.com/opunsoars/status/1259471707577827329>`_ in the Friends of Tracking initiative last year (2020).  
 
 Acknowledgements
 ================

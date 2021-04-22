@@ -43,6 +43,27 @@ Data Loading
     )
 
 
+Basic Football Pitch Event
+==========================
+
+
+``pitchly`` can be used to plot a basic football pitch (currently Metrica data dimensions) and building further on it as needed.
+
+.. code-block:: python
+    :linenos:
+
+    from pitchly.pitch import Pitch
+
+    pitch = Pitch()
+    fig = pitch.plot_pitch()
+
+.. image:: imgs/empty.png
+    :width: 500
+    :alt: Empty pitch
+
+This is however not needed for any further plots as demonstrated below.
+
+
 Tracking Data
 =============
 
@@ -100,9 +121,9 @@ Or use the start time and end time for an interval sequence.
     :alt: Output of plot_sequence by time
 
 
-Pitch control
+Pitch Control
 ^^^^^^^^^^^^^
-The pitch control is calculated by adapting Laurie Shaw's work on William Spearman's model.
+The pitch control is calculated by adapting `Laurie Shaw's <https://twitter.com/eightyfivepoint>`_ work on `William Spearman's model <https://www.researchgate.net/publication/334849056_Quantifying_Pitch_Control>`_.
 Since generating pitch control visualization on the fly gets sluggish, it is recommended to
 proceed with slight patience using the sliders (the pitch control overlay reloads with a tiny
 delay for every frame). The example shown here is for a very small time range (5 seconds / 125

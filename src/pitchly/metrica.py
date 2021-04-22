@@ -274,6 +274,7 @@ class TrackingData:
         frame_data = self.get_frame_data(frameID)
 
         traces = []
+        
         if pitch_control:
             traces.extend(
                 self.get_team_pitch_control_traces(

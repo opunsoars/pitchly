@@ -43,7 +43,7 @@ Modified for pitchly by @author: Vinay Warrier (@opunsoars)
 """
 
 
-def initialise_players(team, teamname, params):
+def initialise_players(frame_data, params):
     """
     initialise_players(team,teamname,params)
 
@@ -64,13 +64,17 @@ def initialise_players(team, teamname, params):
     """
     # get player  ids
     player_ids = np.unique(
-        [c.split("_")[1] for c in team.keys() if c[:4] == teamname]
+        [
+            x.split("_")[1]
+            for x in frame_data.index
+            if x.endswith("_X") and "ball" not in x
+        ]
     )
     # create list
     team_players = []
     for p in player_ids:
         # create a player object for player_id 'p'
-        team_player = player(p, team, teamname, params)
+        team_player = player(p, frame_data, params)
         if team_player.inframe:
             team_players.append(team_player)
     return team_players
@@ -99,29 +103,43 @@ class player(object):
 
     # player object holds position, velocity, time-to-intercept and pitch control contributions for each player
 
-    def __init__(self, pid, team, teamname, params):
+    def __init__(self, pid, frame_data, params):
         self.id = pid
-        self.teamname = teamname
-        self.playername = "%s_%s_" % (teamname, pid)
         # player max speed in m/s. Could be individualised
         self.vmax = params["max_player_speed"]
         # player reaction time in 's'. Could be individualised
         self.reaction_time = params["reaction_time"]
         # standard deviation of sigmoid function (see Eq 4 in Spearman, 2018)
         self.tti_sigma = params["tti_sigma"]
-        self.get_position(team)
-        self.get_velocity(team)
+        self.get_position(frame_data)
+        self.get_velocity(frame_data)
         self.PPCF = 0.0  # initialise this for later
 
-    def get_position(self, team):
+    def get_position(self, frame_data):
         self.position = np.array(
-            [team[self.playername + "x"], team[self.playername + "y"]]
+            frame_data[
+                [
+                    c
+                    for c in frame_data.keys()
+                    if c[-1] in ["X", "Y"] and "ball" not in c and self.id in c
+                ]
+            ],
+            dtype=float,
         )
         self.inframe = not np.any(np.isnan(self.position))
 
-    def get_velocity(self, team):
+    def get_velocity(self, frame_data):
         self.velocity = np.array(
-            [team[self.playername + "vx"], team[self.playername + "vy"]]
+            frame_data[
+                [
+                    c
+                    for c in frame_data.keys()
+                    if c[-2:] in ["vx", "vy"]
+                    and "ball" not in c
+                    and self.id in c
+                ]
+            ],
+            dtype=float,
         )
         if np.any(np.isnan(self.velocity)):
             self.velocity = np.array([0.0, 0.0])
@@ -307,7 +325,7 @@ def calculate_pitch_control_at_target(
     attacking_players,
     defending_players,
     ball_start_pos,
-    params,
+    params=default_model_params(),
     return_individual=False,
 ):
     """calculate_pitch_control_at_target
@@ -435,11 +453,9 @@ def calculate_pitch_control_at_target(
 
 
 def generate_pitch_control_for_frame(
-    hometeam,
-    awayteam,
-    frame,
-    params,
-    attacking,
+    frame_data,
+    params=default_model_params(),
+    attacking="Home",
     field_dimen=(
         106.0,
         68.0,
@@ -471,11 +487,11 @@ def generate_pitch_control_for_frame(
         ygrid: Positions of the pixels in the y-direction (field width)
 
     """
+    hometeam = frame_data[0]
+    awayteam = frame_data[1]
 
     # get the details of the frame: team in possession, ball_start_position)
-    ball_start_pos = np.array(
-        hometeam.loc[frame, ["ball_x", "ball_y"]].tolist()
-    )
+    ball_start_pos = np.array(hometeam[["ball_X", "ball_Y"]].tolist())
 
     # break the pitch down into a grid
     n_grid_cells_y = int(n_grid_cells_x * field_dimen[1] / field_dimen[0])
@@ -490,22 +506,37 @@ def generate_pitch_control_for_frame(
     PPCFa = np.zeros(shape=(len(ygrid), len(xgrid)))
     PPCFd = np.zeros(shape=(len(ygrid), len(xgrid)))
 
+    # pick only the columns representing players whose data is available for
+    # this match
+    # Basically playerIDs that have data for this row/frame
+    homeplayers = [
+        x.split("_")[1]
+        for x in hometeam.dropna().index
+        if x.endswith("_X") and "ball" not in x
+    ]
+    awayplayers = [
+        x.split("_")[1]
+        for x in awayteam.dropna().index
+        if x.endswith("_X") and "ball" not in x
+    ]
+
+    # initialise pitch control grids for individual players in attacking and
+    # defending teams
+    PPCFa_pax = {
+        pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in homeplayers
+    }
+    PPCFd_pax = {
+        pid: np.zeros(shape=(len(ygrid), len(xgrid))) for pid in awayplayers
+    }
+
     # initialise player positions and velocities for pitch control calc (so that we're not repeating this at each grid cell position)
     if attacking == "Home":
-        attacking_players = initialise_players(
-            hometeam.loc[frame], "Home", params
-        )
-        defending_players = initialise_players(
-            awayteam.loc[frame], "Away", params
-        )
+        attacking_players = initialise_players(hometeam, params)
+        defending_players = initialise_players(awayteam, params)
         # opp = "Away"
     elif attacking == "Away":
-        defending_players = initialise_players(
-            hometeam.loc[frame], "Home", params
-        )
-        attacking_players = initialise_players(
-            awayteam.loc[frame], "Away", params
-        )
+        defending_players = initialise_players(hometeam, params)
+        attacking_players = initialise_players(awayteam, params)
         # opp = "Home"
     else:
         assert False, "Team in possession must be either home or away"
@@ -515,12 +546,7 @@ def generate_pitch_control_for_frame(
         for j in range(len(xgrid)):
             target_position = np.array([xgrid[j], ygrid[i]])
             if return_individual == True:
-                (
-                    PPCFa[i, j],
-                    PPCFd[i, j],
-                    Patt,
-                    Pdef,
-                ) = calculate_pitch_control_at_target(
+                out = calculate_pitch_control_at_target(
                     target_position,
                     attacking_players,
                     defending_players,
@@ -528,6 +554,20 @@ def generate_pitch_control_for_frame(
                     params,
                     return_individual=True,
                 )
+
+                if len(out) < 4:
+                    PPCFa[i, j], PPCFd[i, j] = out
+
+                else:
+
+                    # print (target_position, out, [type(x) for x in out])
+                    PPCFa[i, j], PPCFd[i, j], Patt, Pdef = out
+
+                    for pid, ppcf_pax in Patt.items():
+                        PPCFa_pax[pid][i, j] = ppcf_pax
+
+                    for pid, ppcf_pax in Pdef.items():
+                        PPCFd_pax[pid][i, j] = ppcf_pax
             else:
                 PPCFa[i, j], PPCFd[i, j] = calculate_pitch_control_at_target(
                     target_position,
@@ -542,7 +582,19 @@ def generate_pitch_control_for_frame(
     assert (
         1 - checksum < params["model_converge_tol"]
     ), "Checksum failed: %1.3f" % (1 - checksum)
-    return PPCFa, xgrid, ygrid
+
+    pitch_control_dict = dict()
+    if return_individual == True:
+        pitch_control_dict["PPCFa"] = PPCFa
+        pitch_control_dict["xgrid"] = xgrid
+        pitch_control_dict["ygrid"] = ygrid
+        pitch_control_dict["PPCFa_pax"] = PPCFa_pax
+        return pitch_control_dict
+    else:
+        pitch_control_dict["PPCFa"] = PPCFa
+        pitch_control_dict["xgrid"] = xgrid
+        pitch_control_dict["ygrid"] = ygrid
+        return pitch_control_dict
 
 
 # def get_pitch_control(frame_data):
