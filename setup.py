@@ -23,7 +23,7 @@ def read(*names, **kwargs):
 
 setup(
     name='pitchly',
-    version='0.2.1',
+    version='0.2.2',
     license='MIT',
     description='A python package that is a wrapper for Plotly to generate football tracking and event data plots',
     long_description='%s\n%s' % (
