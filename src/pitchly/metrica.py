@@ -379,34 +379,34 @@ class EventData:
         for event in self.events:
             tags = event.raw_event["tags"]
             if "SAVED" in tags or "BLOCKED" in tags:
-                event.raw_event["marker_color"] = "white"
-                event.raw_event["marker_line_color"] = "white"
-                event.raw_event["marker_line_width"] = 2
+                event.raw_event["marker_color"] = prm.blocked_marker_color
+                event.raw_event["marker_line_color"] = prm.marker_border_color
+                event.raw_event["marker_line_width"] = prm.marker_border_size
 
                 if "HEAD" in tags:
-                    event.raw_event["marker_symbol"] = "circle"
+                    event.raw_event["marker_symbol"] = prm.sym_header
                 else:
-                    event.raw_event["marker_symbol"] = "triangle-up"
+                    event.raw_event["marker_symbol"] = prm.sym_footer
 
             elif getattr(event.result, "value", "") == "GOAL":
-                event.raw_event["marker_color"] = "darkgreen"
-                event.raw_event["marker_line_color"] = "white"
-                event.raw_event["marker_line_width"] = 2
+                event.raw_event["marker_color"] = prm.goal_marker_color
+                event.raw_event["marker_line_color"] = prm.marker_border_color
+                event.raw_event["marker_line_width"] = prm.marker_border_size
 
                 if "HEAD" in tags:
-                    event.raw_event["marker_symbol"] = "circle"
+                    event.raw_event["marker_symbol"] = prm.sym_header
                 else:
-                    event.raw_event["marker_symbol"] = "triangle-up"
+                    event.raw_event["marker_symbol"] = prm.sym_footer
 
             else:
                 event.raw_event["marker_color"] = "yellow"
-                event.raw_event["marker_line_color"] = "white"
-                event.raw_event["marker_line_width"] = 2
+                event.raw_event["marker_line_color"] = prm.marker_border_color
+                event.raw_event["marker_line_width"] = prm.marker_border_size
 
                 if "HEAD" in tags:
-                    event.raw_event["marker_symbol"] = "circle-open"
+                    event.raw_event["marker_symbol"] = prm.sym_header_off_target
                 else:
-                    event.raw_event["marker_symbol"] = "triangle-up-open"
+                    event.raw_event["marker_symbol"] = prm.sym_footer_off_target
 
         # self.events = events
 
@@ -590,14 +590,14 @@ class EventData:
                 mode="lines+markers+text",
                 marker_size=[20, 0],
                 # marker_symbol="circle-x",
-                marker_color="#AD0B05"
+                marker_color=prm.home_color
                 if row.team.ground.name == "HOME"
-                else "#0570B0",
-                marker_line_color="white",
+                else prm.away_color,
+                marker_line_color=prm.marker_border_color,
                 marker_line_width=[2, 0],
-                line_color="#AD0B05"
+                line_color=prm.home_color
                 if row.team.ground.name == "HOME"
-                else "#0570B0",
+                else prm.away_color,
                 line_width=1,
                 line_dash="dash" if row.event_name == "carry" else None,
                 textfont=dict(size=11, color="white"),
@@ -649,7 +649,7 @@ class EventData:
                             row.raw_event["start"]["Y"],
                             row.raw_event["end"]["Y"],
                         ],
-                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.raw_event['tags']}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
@@ -681,7 +681,7 @@ class EventData:
                             row.raw_event["start"]["Y"],
                             row.raw_event["end"]["Y"],
                         ],
-                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.result.value}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
@@ -713,19 +713,19 @@ class EventData:
                             row.raw_event["start"]["Y"],
                             row.raw_event["end"]["Y"],
                         ],
-                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.result.value}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[0, 10],
-                        marker_symbol="square",
-                        marker_color="#AD0B05"
+                        marker_symbol=prm.sym_corners,
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[0, 2],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -746,19 +746,19 @@ class EventData:
                             row.raw_event["start"]["Y"],
                             row.raw_event["end"]["Y"],
                         ],
-                        text=f"{row.result.value}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.result.value}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.result.value,
                         mode="lines+markers" if trace else "markers",
                         marker_size=[15, 0],
                         marker_symbol="circle-x",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -773,19 +773,19 @@ class EventData:
                     go.Scatter(
                         x=[row.raw_event["start"]["X"], None],
                         y=[row.raw_event["start"]["Y"], None],
-                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.raw_event['tags']}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -800,19 +800,19 @@ class EventData:
                     go.Scatter(
                         x=[row.raw_event["start"]["X"], None],
                         y=[row.raw_event["start"]["Y"], None],
-                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.raw_event['tags']}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -827,19 +827,19 @@ class EventData:
                     go.Scatter(
                         x=[row.raw_event["start"]["X"], None],
                         y=[row.raw_event["start"]["Y"], None],
-                        text=f"{row.raw_event['tags']}<br>{row.player}({row.team})",  # [None, None],
+                        text=f"{row.raw_event['tags']}<br>{row.player} ({row.team})",  # [None, None],
                         name=row.raw_event["tags"][0],
                         mode="markers",
                         marker_size=[18, 0],
                         marker_symbol="hexagon",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[1, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -865,14 +865,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[20, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -898,14 +898,14 @@ class EventData:
                         mode="lines+markers+text" if trace else "markers+text",
                         marker_size=[20, 0],
                         marker_symbol="pentagon",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[2, 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -937,9 +937,9 @@ class EventData:
                         # marker_color=row["marker_color"],
                         # marker_line_color=row["marker_line_color"],
                         # marker_line_width=[row["marker_line_width"], 0],
-                        line_color="#AD0B05"
+                        line_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
+                        else prm.away_color,
                         line_width=1,
                         # textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -965,12 +965,12 @@ class EventData:
                         mode="markers+text",
                         marker_size=[10, 0],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[1, 0],
-                        # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        # line_color=prm.home_color if row.team.ground.name == "HOME" else prm.away_color,
                         # line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -996,12 +996,12 @@ class EventData:
                         mode="markers+text",
                         marker_size=[0, 10],
                         marker_symbol="diamond",
-                        marker_color="#AD0B05"
+                        marker_color=prm.home_color
                         if row.team.ground.name == "HOME"
-                        else "#0570B0",
-                        marker_line_color="white",
+                        else prm.away_color,
+                        marker_line_color=prm.marker_border_color,
                         marker_line_width=[0, 1],
-                        # line_color="#AD0B05" if row.team.ground.name == "HOME" else "#0570B0",
+                        # line_color=prm.home_color if row.team.ground.name == "HOME" else prm.away_color,
                         # line_width=1,
                         textfont=dict(size=11, color="white"),
                         showlegend=False,
@@ -1009,4 +1009,6 @@ class EventData:
                 )
 
         pitch = Pitch()
-        return pitch.plot_event(data=traces, title=type)
+        return pitch.plot_event(
+            data=traces, title=type.replace("_", " ").title()
+        )

@@ -1,5 +1,7 @@
 from collections import namedtuple
+
 import plotly.graph_objects as go
+
 from src.pitchly.params import prm
 
 
@@ -297,6 +299,17 @@ class Pitch:
         fig.show()
 
         return frames
+
+    def plot_pitch(self):
+        """Just generates an empty pitch.
+        Store it in a fig object and add data to plot over it.
+        """
+        fig_dict = {"data": [], "layout": {}, "frames": []}
+
+        fig_dict["layout"] = self.get_layout()
+
+        fig = go.Figure(fig_dict)
+        fig.show()
 
     def add_pc_controls(self, frames_to_track):
 
