@@ -51,7 +51,7 @@ Overview
     :alt: Supported implementations
     :target: https://pypi.org/project/pitchly
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/opunsoars/pitchly/v0.2.0.svg
+.. |commits-since| image:: https://img.shields.io/github/commits-since/opunsoars/pitchly/v0.2.1.svg
     :alt: Commits since latest release
     :target: https://github.com/opunsoars/pitchly/compare/v0.0.0...master
 
