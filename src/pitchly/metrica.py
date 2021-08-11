@@ -54,7 +54,8 @@ class TrackingData:
         dt = data.timestamp.diff()
 
         # index of first frame in second half
-        second_half_idx = data.period_id.idxmax(2)
+        second_half_id = 2
+        second_half_idx = data.period_id.loc[data.period_id == second_half_id].first_valid_index()
         # estimate velocities for players in team
         for player in player_ids:  # cycle through players individually
             # difference player positions in timestep dt to get unsmoothed
