@@ -317,6 +317,7 @@ class TrackingData:
         plot_ball=True,
         show_velocities=False,
         player_num=None,
+        show=True
     ):
 
         if time:
@@ -338,7 +339,7 @@ class TrackingData:
             ball=plot_ball,
         )
         pitch = Pitch()
-        return pitch.plot_freeze_frame(data, title, pitch_control)
+        return pitch.plot_freeze_frame(data, title, pitch_control, show)
 
     def plot_sequence(
         self,
