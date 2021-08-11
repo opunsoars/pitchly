@@ -54,7 +54,8 @@ class TrackingData:
         dt = data.timestamp.diff()
 
         # index of first frame in second half
-        second_half_idx = data.period_id.idxmax(2)
+        second_half_id = 2
+        second_half_idx = data.period_id.loc[data.period_id == second_half_id].first_valid_index()
         # estimate velocities for players in team
         for player in player_ids:  # cycle through players individually
             # difference player positions in timestep dt to get unsmoothed
@@ -316,6 +317,7 @@ class TrackingData:
         plot_ball=True,
         show_velocities=False,
         player_num=None,
+        show=True
     ):
 
         if time:
@@ -337,7 +339,7 @@ class TrackingData:
             ball=plot_ball,
         )
         pitch = Pitch()
-        return pitch.plot_freeze_frame(data, title, pitch_control)
+        return pitch.plot_freeze_frame(data, title, pitch_control, show)
 
     def plot_sequence(
         self,

@@ -273,7 +273,7 @@ class Pitch:
 
         return layout
 
-    def plot_freeze_frame(self, data, title, pitch_control):
+    def plot_freeze_frame(self, data, title, pitch_control, show=True):
         fig_dict = {"data": [], "layout": {}, "frames": []}
 
         fig_dict["layout"] = self.get_layout(
@@ -282,10 +282,14 @@ class Pitch:
         fig_dict["data"] = data
 
         fig = go.Figure(fig_dict)
-        fig.show()
+
+        if show:
+            fig.show()
+
+        return fig
 
     def plot_frames_sequence(
-        self, data, frames, frame_range, title, pitch_control
+        self, data, frames, frame_range, title, pitch_control, show=True
     ):
         fig_dict = {"data": [], "layout": {}, "frames": []}
 
@@ -296,9 +300,13 @@ class Pitch:
         fig_dict["frames"] = frames
 
         fig = go.Figure(fig_dict)
-        fig.show()
 
-    def plot_pitch(self):
+        if show:
+            fig.show()
+
+        return fig
+
+    def plot_pitch(self, show=True):
         """Just generates an empty pitch.
         Store it in a fig object and add data to plot over it.
         """
@@ -307,7 +315,11 @@ class Pitch:
         fig_dict["layout"] = self.get_layout()
 
         fig = go.Figure(fig_dict)
-        fig.show()
+
+        if show:
+            fig.show()
+
+        return fig
 
     def add_pc_controls(self, frames_to_track):
 
@@ -464,11 +476,15 @@ class Pitch:
 
         return [updatemenus], [sliders_dict]
 
-    def plot_event(self, data, title):
+    def plot_event(self, data, title, show=True):
         fig_dict = {"data": [], "layout": {}, "frames": []}
 
         fig_dict["layout"] = self.get_layout(title=title)
         fig_dict["data"] = data
 
         fig = go.Figure(fig_dict)
-        fig.show()
+
+        if show:
+            fig.show()
+
+        return fig
